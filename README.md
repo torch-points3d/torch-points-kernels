@@ -11,4 +11,11 @@ or with poetry:
 poetry add git+https://github.com/nicolas-chaulet/torch-points.git
 ```
 
+##
+Usage
+```
+import torch
+import torch_points.points_cuda
+```
+
 Credit: [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch)
