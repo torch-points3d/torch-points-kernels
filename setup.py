@@ -10,7 +10,7 @@ ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob(
 
 setup(
     name="torch_points",
-    version=torch_points.__version__,
+    version="0.1.0",
     author="Nicolas Chaulet",
     packages=find_packages(),
     install_requires=[],
