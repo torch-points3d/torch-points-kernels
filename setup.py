@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
 import glob
-import torch_points
 
 ext_src_root = "cuda"
 ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob(
