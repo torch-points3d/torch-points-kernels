@@ -18,4 +18,8 @@ import torch
 import torch_points.points_cuda
 ```
 
+#Projects using those kernels.
+
+[```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks)
+
 Credit: [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch)
