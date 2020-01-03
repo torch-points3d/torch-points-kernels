@@ -22,7 +22,7 @@ if CUDA_HOME:
 
 setup(
     name="torch_points",
-    version="0.1.1",
+    version="0.1.2",
     author="Nicolas Chaulet",
     packages=find_packages(),
     install_requires=[],
