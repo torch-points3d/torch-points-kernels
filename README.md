@@ -11,14 +11,13 @@ or with poetry:
 poetry add git+https://github.com/nicolas-chaulet/torch-points.git
 ```
 
-##
-Usage
+## Usage
 ```
 import torch
 import torch_points.points_cuda
 ```
 
-#Projects using those kernels.
+# Projects using those kernels.
 
 [```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks)
 
