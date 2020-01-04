@@ -33,3 +33,7 @@
 
 build
 *.pyc
+
+.vscode/
+dist/
+torch_points.egg-info/
