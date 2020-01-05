@@ -164,6 +164,66 @@ def three_interpolate(features, idx, weight):
     """
     return ThreeInterpolate.apply(features, idx, weight)
 
+class ThreeInterpolate2(Function):
+    @staticmethod
+    def forward(ctx, features, idx, weight):
+        # type(Any, torch.Tensor, torch.Tensor, torch.Tensor) -> Torch.Tensor
+        B, c, m = features.size()
+        n = idx.size(1)
+
+        ctx.three_interpolate_for_backward = (idx, weight, m)
+
+        out = torch.zeros((B, c, n)).to(features.device)
+        tpcuda.three_interpolate_wrapper_fast(B, c, m, n, features, idx, weight, out)
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_out):
+        # type: (Any, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        r"""
+        Parameters
+        ----------
+        grad_out : torch.Tensor
+            (B, c, n) tensor with gradients of ouputs
+
+        Returns
+        -------
+        grad_features : torch.Tensor
+            (B, c, m) tensor with gradients of features
+
+        None
+
+        None
+        """
+        idx, weight, m = ctx.three_interpolate_for_backward
+
+        B, c, n = grad_out.size()
+
+        grad_features = torch.zeros(B, c, m).to(grad_out.device)
+        grad_out_data = grad_out.data.contiguous()
+
+        tpcuda.three_interpolate_grad_wrapper_fast(B, c, n, m, grad_out_data, idx, weight, grad_features.data)
+        return grad_features, None, None
+
+def three_interpolate2(features, idx, weight):
+    r"""
+    Performs weight linear interpolation on 3 features
+    Parameters
+    ----------
+    features : torch.Tensor
+        (B, c, m) Features descriptors to be interpolated from
+    idx : torch.Tensor
+        (B, n, 3) three nearest neighbors of the target features in features
+    weight : torch.Tensor
+        (B, n, 3) weights
+
+    Returns
+    -------
+    torch.Tensor
+        (B, c, n) tensor of the interpolated features
+    """
+    return ThreeInterpolate2.apply(features, idx, weight)
+
 
 class GroupingOperation(Function):
     @staticmethod
