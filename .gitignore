@@ -33,3 +33,6 @@
 
 build
 *.pyc
+
+build
+*.egg*
