@@ -26,5 +26,4 @@ at::Tensor group_points(at::Tensor points, at::Tensor idx) {
     }
 
     return output; 
-
 }

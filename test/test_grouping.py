@@ -50,7 +50,5 @@ class TestGroup(unittest.TestCase):
             ).detach().cpu().numpy(), expected)
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
