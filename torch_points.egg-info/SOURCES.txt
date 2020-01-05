@@ -1,4 +1,5 @@
 README.md
+setup.py
 cuda/src/ball_query.cpp
 cuda/src/ball_query_gpu.cu
 cuda/src/bindings.cpp
