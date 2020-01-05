@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME, CppExtension
 import glob
 
 ext_src_root = "cuda"
@@ -19,6 +19,19 @@ if CUDA_HOME:
             },
         )
     )
+
+cpu_ext_src_root = "cpu"
+cpu_ext_sources = glob.glob("{}/src/*.cpp".format(cpu_ext_src_root))
+
+ext_modules.append(
+    CppExtension(
+        name="torch_points.points_cpu",
+        sources=cpu_ext_sources,
+        extra_compile_args={
+            "cxx": ["-O2", "-I{}".format("{}/include".format(cpu_ext_src_root))],
+        },
+    )
+)
 
 setup(
     name="torch_points",
