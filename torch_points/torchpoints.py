@@ -186,6 +186,66 @@ def three_interpolate(features, idx, weight):
     """
     return ThreeInterpolate.apply(features, idx, weight)
 
+class ThreeInterpolate2(Function):
+    @staticmethod
+    def forward(ctx, features, idx, weight):
+        # type(Any, torch.Tensor, torch.Tensor, torch.Tensor) -> Torch.Tensor
+        B, c, m = features.size()
+        n = idx.size(1)
+
+        ctx.three_interpolate_for_backward = (idx, weight, m)
+
+        out = torch.zeros((B, c, n)).to(features.device)
+        tpcuda.three_interpolate_wrapper_fast(B, c, m, n, features, idx, weight, out)
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_out):
+        # type: (Any, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        r"""
+        Parameters
+        ----------
+        grad_out : torch.Tensor
+            (B, c, n) tensor with gradients of ouputs
+
+        Returns
+        -------
+        grad_features : torch.Tensor
+            (B, c, m) tensor with gradients of features
+
+        None
+
+        None
+        """
+        idx, weight, m = ctx.three_interpolate_for_backward
+
+        B, c, n = grad_out.size()
+
+        grad_features = torch.zeros(B, c, m).to(grad_out.device)
+        grad_out_data = grad_out.data.contiguous()
+
+        tpcuda.three_interpolate_grad_wrapper_fast(B, c, n, m, grad_out_data, idx, weight, grad_features.data)
+        return grad_features, None, None
+
+def three_interpolate2(features, idx, weight):
+    r"""
+    Performs weight linear interpolation on 3 features
+    Parameters
+    ----------
+    features : torch.Tensor
+        (B, c, m) Features descriptors to be interpolated from
+    idx : torch.Tensor
+        (B, n, 3) three nearest neighbors of the target features in features
+    weight : torch.Tensor
+        (B, n, 3) weights
+
+    Returns
+    -------
+    torch.Tensor
+        (B, c, n) tensor of the interpolated features
+    """
+    return ThreeInterpolate2.apply(features, idx, weight)
+
 
 class GroupingOperation(Function):
     @staticmethod
@@ -277,3 +337,102 @@ def ball_query(radius, nsample, xyz, new_xyz):
         (B, npoint, nsample) tensor with the indicies of the features that form the query balls
     """
     return BallQuery.apply(radius, nsample, xyz, new_xyz)
+
+
+class QueryAndGroup(nn.Module):
+    r"""
+    Groups with a ball query of radius
+    Parameters
+    ---------
+    radius : float32
+        Radius of ball
+    nsample : int32
+        Maximum number of features to gather in the ball
+    """
+
+    def __init__(self, radius, nsample, use_xyz=True):
+        # type: (QueryAndGroup, float, int, bool) -> None
+        super(QueryAndGroup, self).__init__()
+        self.radius, self.nsample, self.use_xyz = radius, nsample, use_xyz
+
+    def forward(self, xyz, new_xyz, features=None):
+        # type: (QueryAndGroup, torch.Tensor. torch.Tensor, torch.Tensor) -> Tuple[Torch.Tensor]
+        r"""
+        Parameters
+        ----------
+        xyz : torch.Tensor
+            xyz coordinates of the features (B, N, 3)
+        new_xyz : torch.Tensor
+            centriods (B, npoint, 3)
+        features : torch.Tensor
+            Descriptors of the features (B, C, N)
+        Returns
+        -------
+        new_features : torch.Tensor
+            (B, 3 + C, npoint, nsample) tensor
+        """
+
+        idx = ball_query(self.radius, self.nsample, xyz, new_xyz)
+        xyz_trans = xyz.transpose(1, 2).contiguous()
+        grouped_xyz = grouping_operation(xyz_trans, idx)  # (B, 3, npoint, nsample)
+        grouped_xyz -= new_xyz.transpose(1, 2).unsqueeze(-1)
+
+        if features is not None:
+            grouped_features = grouping_operation(features, idx)
+            if self.use_xyz:
+                new_features = torch.cat(
+                    [grouped_xyz, grouped_features], dim=1
+                )  # (B, C + 3, npoint, nsample)
+            else:
+                new_features = grouped_features
+        else:
+            assert (
+                self.use_xyz
+            ), "Cannot have not features and not use xyz as a feature!"
+            new_features = grouped_xyz
+
+        return new_features
+
+
+class GroupAll(nn.Module):
+    r"""
+    Groups all features
+    Parameters
+    ---------
+    """
+
+    def __init__(self, use_xyz=True):
+        # type: (GroupAll, bool) -> None
+        super(GroupAll, self).__init__()
+        self.use_xyz = use_xyz
+
+    def forward(self, xyz, new_xyz, features=None):
+        # type: (GroupAll, torch.Tensor, torch.Tensor, torch.Tensor) -> Tuple[torch.Tensor]
+        r"""
+        Parameters
+        ----------
+        xyz : torch.Tensor
+            xyz coordinates of the features (B, N, 3)
+        new_xyz : torch.Tensor
+            Ignored
+        features : torch.Tensor
+            Descriptors of the features (B, C, N)
+        Returns
+        -------
+        new_features : torch.Tensor
+            (B, C + 3, 1, N) tensor
+        """
+
+        grouped_xyz = xyz.transpose(1, 2).unsqueeze(2)
+        if features is not None:
+            grouped_features = features.unsqueeze(2)
+            if self.use_xyz:
+                new_features = torch.cat(
+                    [grouped_xyz, grouped_features], dim=1
+                )  # (B, 3 + C, 1, N)
+            else:
+                new_features = grouped_features
+        else:
+            new_features = grouped_xyz
+
+        return new_features

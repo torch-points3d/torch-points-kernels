@@ -12,6 +12,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("three_interpolate", &three_interpolate);
   m.def("three_interpolate_grad", &three_interpolate_grad);
 
+  m.def("three_nn_wrapper", &three_nn_wrapper_fast, "three_nn_wrapper_fast");
+  m.def("three_interpolate_wrapper_fast", &three_interpolate_wrapper_fast, "three_interpolate_wrapper_fast");
+  m.def("three_interpolate_grad_wrapper_fast", &three_interpolate_grad_wrapper_fast, "three_interpolate_grad_wrapper_fast");
+
   m.def("ball_query", &ball_query);
 
   m.def("group_points", &group_points);
