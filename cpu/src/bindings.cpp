@@ -5,12 +5,9 @@ using namespace pybind11::literals;
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("group_points", &group_points);
-}
 
-
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-	m.def("ball_query",
-	      &radius_search,
+    m.def("ball_query",
+	      &ball_query,
 	      "compute the radius search of a point cloud using nanoflann"
 	      "-query : a pytorch tensor of size N1 x 3,. used to query the nearest neighbors"
 	      "- support : a pytorch tensor of size N2 x 3. used to build the tree"
@@ -21,8 +18,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 	      "mode=1 means a matrix of edges of size Num_edge x 2"
 	      "return a tensor of size N1 x M where M is either max_num or the maximum number of neighbors found if mode = 0, if mode=1 return a tensor of size Num_edge x 2 and return a tensor containing the squared distance of the neighbors",
 	      "query"_a, "support"_a, "radius"_a, "max_num"_a=-1, "mode"_a=0);
-	m.def("batch_ball_query",
-	      &batch_radius_search,
+
+    m.def("batch_ball_query",
+	      &batch_ball_query,
 		"compute the radius search of a point cloud for each batch using nanoflann"
 		"-query : a pytorch tensor (float) of size N1 x 3,. used to query the nearest neighbors"
 		"- support : a pytorch tensor(float) of size N2 x 3. used to build the tree"
