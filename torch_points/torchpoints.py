@@ -3,13 +3,19 @@ from torch.autograd import Function
 import torch.nn as nn
 import sys
 
-import torch_points.points_cuda as tpcuda
+import torch_points.points_cpu as tpcpu
+
+if torch.cuda.is_available():
+    import torch_points.points_cuda as tpcuda
 
 
 class FurthestPointSampling(Function):
     @staticmethod
     def forward(ctx, xyz, npoint):
-        return tpcuda.furthest_point_sampling(xyz, npoint)
+        if xyz.is_cuda:
+            return tpcuda.furthest_point_sampling(xyz, npoint)
+        else:
+            raise NotImplementedError
 
     @staticmethod
     def backward(xyz, a=None):
@@ -45,14 +51,20 @@ class GatherOperation(Function):
 
         ctx.for_backwards = (idx, C, N)
 
-        return tpcuda.gather_points(features, idx)
+        if features.is_cuda:
+            return tpcuda.gather_points(features, idx)
+        else:
+            return tpcpu.gather_points(features, idx)
 
     @staticmethod
     def backward(ctx, grad_out):
         idx, C, N = ctx.for_backwards
 
-        grad_features = tpcuda.gather_points_grad(grad_out.contiguous(), idx, N)
-        return grad_features, None
+        if grad_out.is_cuda:
+            grad_features = tpcuda.gather_points_grad(grad_out.contiguous(), idx, N)
+            return grad_features, None
+        else:
+            raise NotImplementedError
 
 
 def gather_operation(features, idx):
@@ -64,12 +76,12 @@ def gather_operation(features, idx):
            (B, C, N) tensor
 
        idx : torch.Tensor
-           (B, npoint) tensor of the features to gather
+           (B, npoint, nsample) tensor of the features to gather
 
        Returns
        -------
        torch.Tensor
-           (B, C, npoint) tensor
+           (B, C, npoint, nsample) tensor
        """
     return GatherOperation.apply(features, idx)
 
@@ -78,7 +90,11 @@ class ThreeNN(Function):
     @staticmethod
     def forward(ctx, unknown, known):
         # type: (Any, torch.Tensor, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]
-        dist2, idx = tpcuda.three_nn(unknown, known)
+
+        if unknown.is_cuda:
+            dist2, idx = tpcuda.three_nn(unknown, known)
+        else:
+            raise NotImplementedError
 
         return torch.sqrt(dist2), idx
 
@@ -116,7 +132,10 @@ class ThreeInterpolate(Function):
 
         ctx.three_interpolate_for_backward = (idx, weight, m)
 
-        return tpcuda.three_interpolate(features, idx, weight)
+        if features.is_cuda:
+            return tpcuda.three_interpolate(features, idx, weight)
+        else:
+            raise NotImplementedError
 
     @staticmethod
     def backward(ctx, grad_out):
@@ -138,9 +157,12 @@ class ThreeInterpolate(Function):
         """
         idx, weight, m = ctx.three_interpolate_for_backward
 
-        grad_features = tpcuda.three_interpolate_grad(
-            grad_out.contiguous(), idx, weight, m
-        )
+        if grad_out.is_cuda:
+            grad_features = tpcuda.three_interpolate_grad(
+                grad_out.contiguous(), idx, weight, m
+            )
+        else:
+            raise NotImplementedError
 
         return grad_features, None, None
 
@@ -234,7 +256,10 @@ class GroupingOperation(Function):
 
         ctx.for_backwards = (idx, N)
 
-        return tpcuda.group_points(features, idx)
+        if features.is_cuda:
+            return tpcuda.group_points(features, idx)
+        else:
+            return tpcpu.group_points(features, idx)
 
     @staticmethod
     def backward(ctx, grad_out):
@@ -254,7 +279,10 @@ class GroupingOperation(Function):
         """
         idx, N = ctx.for_backwards
 
-        grad_features = tpcuda.group_points_grad(grad_out.contiguous(), idx, N)
+        if grad_out.is_cuda:
+            grad_features = tpcuda.group_points_grad(grad_out.contiguous(), idx, N)
+        else:
+            raise NotImplementedError
 
         return grad_features, None
 
@@ -280,7 +308,10 @@ class BallQuery(Function):
     @staticmethod
     def forward(ctx, radius, nsample, xyz, new_xyz):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
-        return tpcuda.ball_query(new_xyz, xyz, radius, nsample)
+        if new_xyz.is_cuda:
+            return tpcuda.ball_query(new_xyz, xyz, radius, nsample)
+        else:
+            raise NotImplementedError
 
     @staticmethod
     def backward(ctx, a=None):
