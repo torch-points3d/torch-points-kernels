@@ -311,7 +311,8 @@ class BallQuery(Function):
         if new_xyz.is_cuda:
             return tpcuda.ball_query(new_xyz, xyz, radius, nsample)
         else:
-            raise NotImplementedError
+            ind, dist = tpcpu.ball_query(new_xyz, xyz, radius, nsample)
+            return ind
 
     @staticmethod
     def backward(ctx, a=None):
