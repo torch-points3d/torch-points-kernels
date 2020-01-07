@@ -311,8 +311,17 @@ class BallQuery(Function):
         if new_xyz.is_cuda:
             return tpcuda.ball_query(new_xyz, xyz, radius, nsample)
         else:
-            ind, dist = tpcpu.ball_query(new_xyz, xyz, radius, nsample)
-            return ind
+            b = xyz.size(0)
+            npoints = new_xyz.size(1)
+            n = xyz.size(1)
+            batch_new_xyz = torch.arange(0, b, dtype=torch.long).repeat(npoints, 1).T.reshape(-1)
+            batch_xyz = torch.arange(0, b, dtype=torch.long).repeat(n, 1).T.reshape(-1)
+            ind, dist = tpcpu.batch_ball_query(new_xyz.view(-1, 3),
+                                               xyz.view(-1, 3),
+                                               batch_new_xyz,
+                                               batch_xyz,
+                                               radius, nsample)
+            return ind.view(b, npoints, nsample)
 
     @staticmethod
     def backward(ctx, a=None):
