@@ -1,6 +1,8 @@
 #include "group_points.h"
 #include "ball_query.h"
 
+using namespace pybind11::literals;
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("group_points", &group_points);
 
