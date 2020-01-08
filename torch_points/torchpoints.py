@@ -277,3 +277,37 @@ def ball_query(radius, nsample, xyz, new_xyz):
         (B, npoint, nsample) tensor with the indicies of the features that form the query balls
     """
     return BallQuery.apply(radius, nsample, xyz, new_xyz)
+
+
+class BallQueryShifted(Function):
+    @staticmethod
+    def forward(ctx, radius, nsample, xyz, new_xyz):
+        # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
+        if new_xyz.is_cuda:
+            return tpcuda.ball_query_shifted(new_xyz, xyz, radius, nsample)
+        else:
+            raise NotImplementedError
+
+    @staticmethod
+    def backward(ctx, a=None):
+        return None, None, None, None
+
+
+def ball_query_shifted(radius, nsample, xyz, new_xyz):
+    r"""
+    Parameters
+    ----------
+    radius : float
+        radius of the balls
+    nsample : int
+        maximum number of features in the balls
+    xyz : torch.Tensor
+        (B, N, 3) xyz coordinates of the features
+    new_xyz : torch.Tensor
+        (B, npoint, 3) centers of the ball query
+    Returns
+    -------
+    torch.Tensor
+        (B, npoint, nsample) tensor with the indicies + 1 of the features that form the query balls
+    """
+    return BallQueryShifted.apply(radius, nsample, xyz, new_xyz)
