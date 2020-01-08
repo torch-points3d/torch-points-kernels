@@ -246,10 +246,16 @@ def grouping_operation(features, idx):
 
 class BallQuery(Function):
     @staticmethod
-    def forward(ctx, radius, nsample, xyz, new_xyz):
+    def forward(ctx, radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if new_xyz.is_cuda:
-            return tpcuda.ball_query(new_xyz, xyz, radius, nsample)
+            if(batch_new_xyz is not None and batch_xyz is not None):
+                return tpcuda.ball_query_partial_dense(new_xyz, xyz,
+                                                       batch_new_xyz,
+                                                       batch_xyz,
+                                                       radius, nsample)
+            else:
+                return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
         else:
             b = xyz.size(0)
             npoints = new_xyz.size(1)
