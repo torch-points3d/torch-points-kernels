@@ -76,12 +76,12 @@ def gather_operation(features, idx):
            (B, C, N) tensor
 
        idx : torch.Tensor
-           (B, npoint, nsample) tensor of the features to gather
+           (B, npoint) tensor of the features to gather
 
        Returns
        -------
        torch.Tensor
-           (B, C, npoint, nsample) tensor
+           (B, C, npoint) tensor
        """
     return GatherOperation.apply(features, idx)
 

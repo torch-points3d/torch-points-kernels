@@ -20,9 +20,7 @@ class TestBall(unittest.TestCase):
     def test_cpu_gpu_equality(self):
         a = torch.randn(5, 1000, 3)
         npt.assert_array_equal(ball_query(0.1, 17, a, a).detach().numpy(),
-                               ball_query(0.1, 17, a.cuda(), a.cuda()).detach().numpy())
-
-
+                               ball_query(0.1, 17, a.cuda(), a.cuda()).cpu().detach().numpy())
 
 
 if __name__ == "__main__":
