@@ -67,10 +67,10 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 		CHECK_CUDA(batch_y);
 	}
 
-	at::Tensor idx = torch::zeros({x.size(0), nsample},
-				      at::device(x.device()).dtype(at::ScalarType::Long));
-	at::Tensor dist = torch::zeros({x.size(0), nsample},
-				      at::device(x.device()).dtype(at::ScalarType::Float));
+	at::Tensor idx = torch::zeros({y.size(0), nsample},
+				      at::device(y.device()).dtype(at::ScalarType::Long));
+	at::Tensor dist = torch::zeros({y.size(0), nsample},
+				      at::device(y.device()).dtype(at::ScalarType::Float));
 
 	cudaSetDevice(x.get_device());
 	auto batch_sizes = (int64_t *)malloc(sizeof(int64_t));
