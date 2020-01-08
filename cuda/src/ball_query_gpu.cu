@@ -83,8 +83,8 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 						dist_out[n_q * nsample + l] = dist;
 					}
 				}
-				idx_out[n_q*nsample + count] = n_s;
-				dist_out[n_q*nsample + count] = dist;
+				idx_out[n_q * nsample + count] = n_s;
+				dist_out[n_q * nsample + count] = dist;
 				count++;
 		       }
 			if(count >= nsample){
@@ -103,7 +103,6 @@ void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius,
 
   CUDA_CHECK_ERRORS();
 }
-
 
 void query_ball_point_kernel_partial_wrapper(long batch_size,
 						int size_x,

@@ -244,18 +244,12 @@ def grouping_operation(features, idx):
     return GroupingOperation.apply(features, idx)
 
 
-class BallQuery(Function):
+class BallQueryDense(Function):
     @staticmethod
     def forward(ctx, radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if new_xyz.is_cuda:
-            if(batch_new_xyz is not None and batch_xyz is not None):
-                return tpcuda.ball_query_partial_dense(new_xyz, xyz,
-                                                       batch_new_xyz,
-                                                       batch_xyz,
-                                                       radius, nsample)
-            else:
-                return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
+            return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
         else:
             b = xyz.size(0)
             npoints = new_xyz.size(1)
@@ -274,7 +268,7 @@ class BallQuery(Function):
         return None, None, None, None
 
 
-def ball_query(radius, nsample, xyz, new_xyz):
+def ball_query_dense(radius, nsample, xyz, new_xyz):
     r"""
     Parameters
     ----------
@@ -292,4 +286,47 @@ def ball_query(radius, nsample, xyz, new_xyz):
     torch.Tensor
         (B, npoint, nsample) tensor with the indicies of the features that form the query balls
     """
-    return BallQuery.apply(radius, nsample, xyz, new_xyz)
+    return BallQueryDense.apply(radius, nsample, xyz, new_xyz)
+
+class BallQueryPartialDense(Function):
+    @staticmethod
+    def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
+        # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
+        if x.is_cuda:
+                return tpcuda.ball_query_partial_dense(x, y,
+                                                       batch_y,
+                                                       batch_y,
+                                                       radius, nsample)
+        else:
+            raise NotImplementedError
+
+    @staticmethod
+    def backward(ctx, a=None):
+        return None, None, None, None
+
+
+def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
+    r"""
+    Parameters
+    ----------
+    radius : float
+        radius of the balls
+    nsample : int
+        maximum number of features in the balls
+    x : torch.Tensor
+        (M, 3) xyz coordinates of the features
+    y : torch.Tensor
+        (N, npoint, 3) centers of the ball query
+    batch_x : torch.Tensor
+        (M, ) Contains indexes to indicate within batch it belongs to 
+    batch_y : torch.Tensor
+        (N, ) Contains indexes to indicate within batch it belongs to  
+
+    Returns
+    -------
+    torch.Tensor
+        (B, npoint, nsample) tensor with the indicies of the features that form the query balls
+    """
+    return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
+
+
