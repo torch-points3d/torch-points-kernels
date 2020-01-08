@@ -46,40 +46,41 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
   }
 }
 
-__global__ void query_ball_point_kernel_partial_dense(int size_new_xyz,
-						      int size_xyz,
+__global__ void query_ball_point_kernel_partial_dense(int size_x,
+						      int size_y,
 						      float radius,
 						      int nsample,
-						      const float *__restrict__ new_xyz,
-						      const float *__restrict__ xyz,
-						      const long *__restrict__ batch_new_xyz,
-						      const long *__restrict__ batch_xyz,
-						      long *__restrict__ idx_out,
-						      float * __restrict__ dist_out) {
+						      const float *__restrict__ x,
+						      const float *__restrict__ y,
+						      const long *__restrict__ batch_x,
+						      const long *__restrict__ batch_y,
+						      int64_t *__restrict__ idx_out,
+							  float * __restrict__ dist_out) {
+
 	// taken from https://github.com/rusty1s/pytorch_cluster/blob/master/cuda/radius_kernel.cu
 	const ptrdiff_t batch_idx = blockIdx.x;
 	const ptrdiff_t idx = threadIdx.x;
 
-	const ptrdiff_t start_idx_q = batch_new_xyz[batch_idx];
-	const ptrdiff_t end_idx_q = batch_new_xyz[batch_idx + 1];
+	const ptrdiff_t start_idx_q = batch_x[batch_idx];
+	const ptrdiff_t end_idx_q = batch_x[batch_idx + 1];
 
-	const ptrdiff_t start_idx_s = batch_xyz[batch_idx];
-	const ptrdiff_t end_idx_s = batch_xyz[batch_idx + 1];
+	const ptrdiff_t start_idx_s = batch_y[batch_idx];
+	const ptrdiff_t end_idx_s = batch_y[batch_idx + 1];
 	float radius2 = radius * radius;
 
 	for (ptrdiff_t n_q = start_idx_q + idx; n_q < end_idx_q; n_q += THREADS) {
-		int count = 0;
+		size_t count = 0;
 		for (ptrdiff_t n_s = start_idx_s; n_s < end_idx_s; n_s++) {
 			float dist = 0;
 			for (ptrdiff_t d = 0; d < 3; d++) {
-				dist += (new_xyz[n_q * 3 + d] - xyz[n_s * 3 + d]) *
-					(new_xyz[n_q * 3 + d] - xyz[n_s * 3 + d]);
+				dist += (x[n_q * 3 + d] - y[n_s * 3 + d]) *
+					(x[n_q * 3 + d] - y[n_s * 3 + d]);
 			}
 			if(dist <= radius2){
 				if (count == 0){
 					for(ptrdiff_t l = 0; l < nsample; ++l){
-						idx_out[n_q * nsample + l] = size_xyz;
-						dist_out[n_q * nsample + l] = radius2;
+						idx_out[n_q * nsample + l] = n_s;
+						dist_out[n_q * nsample + l] = dist;
 					}
 				}
 				idx_out[n_q*nsample + count] = n_s;
@@ -93,7 +94,6 @@ __global__ void query_ball_point_kernel_partial_dense(int size_new_xyz,
 	}
 }
 
-
 void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius,
 					   int nsample, const float *new_xyz,
 					   const float *xyz, int *idx) {
@@ -106,17 +106,20 @@ void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius,
 
 
 void query_ball_point_kernel_partial_wrapper(long batch_size,
-					     int size_new_xyz,
-					     int size_xyz, float radius, int nsample,
-					     const float *new_xyz,
-					     const float *xyz,
-					     const long *batch_new_xyz,
-					     const long *batch_xyz,
-					     long *idx_out,
-					     float *dist_out) {
+						int size_x,
+						int size_y, 
+						float radius, 
+						int nsample,
+						const float *x,
+						const float *y,
+						const long *batch_x,
+						const long *batch_y,
+						int64_t *idx_out,
+						float *dist_out) {
+
 	query_ball_point_kernel_partial_dense<<<batch_size, THREADS>>>(
-		size_new_xyz, size_xyz, radius, nsample, new_xyz, xyz,
-		batch_new_xyz, batch_xyz, idx_out, dist_out);
+		size_x, size_y, radius, nsample, x, y,
+		batch_x, batch_y, idx_out, dist_out);
 
 	CUDA_CHECK_ERRORS();
 }
