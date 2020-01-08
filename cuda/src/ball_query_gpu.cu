@@ -17,7 +17,7 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
   int batch_index = blockIdx.x;
   xyz += batch_index * n * 3;
   new_xyz += batch_index * m * 3;
-  idx += m * nsample * batch_index;
+  idx_out += m * nsample * batch_index;
 
   int index = threadIdx.x;
   int stride = blockDim.x;
@@ -48,8 +48,8 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
 
 __global__ void query_ball_point_kernel_partial_dense(int size_new_xyz,
 						      int size_xyz,
-						      float radius;
-						      int nsample;
+						      float radius,
+						      int nsample,
 						      const float *__restrict__ new_xyz,
 						      const float *__restrict__ xyz,
 						      const long *__restrict__ batch_new_xyz,
@@ -66,24 +66,29 @@ __global__ void query_ball_point_kernel_partial_dense(int size_new_xyz,
 	const ptrdiff_t start_idx_s = batch_xyz[batch_idx];
 	const ptrdiff_t end_idx_s = batch_xyz[batch_idx + 1];
 	float radius2 = radius * radius;
-	for (ptrdiff_t n_q = start_idx_q + idx; n_q < end_idx_q; n_q += THREADS) {
 
-		for (ptrdiff_t n_s = start_idx_s, int count = 0; n_s < end_idx_s, count < nsample; n_s++) {
+	for (ptrdiff_t n_q = start_idx_q + idx; n_q < end_idx_q; n_q += THREADS) {
+		int count = 0;
+		for (ptrdiff_t n_s = start_idx_s; n_s < end_idx_s; n_s++) {
 			float dist = 0;
 			for (ptrdiff_t d = 0; d < 3; d++) {
 				dist += (new_xyz[n_q * 3 + d] - xyz[n_s * 3 + d]) *
 					(new_xyz[n_q * 3 + d] - xyz[n_s * 3 + d]);
 			}
-		}
-		if(dist <= radius2){
-			if (count == 0){
-				for(ptrdiff_t l = 0; l < nsample; ++l)
-				idx_out[n_q * nsample + l] = size_xyz;
-				dist[n_q * nsample + l] = radius2;
+			if(dist <= radius2){
+				if (count == 0){
+					for(ptrdiff_t l = 0; l < nsample; ++l){
+						idx_out[n_q * nsample + l] = size_xyz;
+						dist_out[n_q * nsample + l] = radius2;
+					}
+				}
+				idx_out[n_q*nsample + count] = n_s;
+				dist_out[n_q*nsample + count] = dist;
+				count++;
+		       }
+			if(count >= nsample){
+				break;
 			}
-			idx_out[n_q*nsample + count] = n_s;
-			dist_out[n_q*nsample + count] = dist;
-			count++;
 		}
 	}
 }
@@ -106,7 +111,7 @@ void query_ball_point_kernel_partial_wrapper(long batch_size,
 					     const float *new_xyz,
 					     const float *xyz,
 					     const long *batch_new_xyz,
-					     const long *new_xyz,
+					     const long *batch_xyz,
 					     long *idx_out,
 					     float *dist_out) {
 	query_ball_point_kernel_partial_dense<<<batch_size, THREADS>>>(
