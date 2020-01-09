@@ -9,6 +9,7 @@ if torch.cuda.is_available():
     import torch_points.points_cuda as tpcuda
 
 
+
 class FurthestPointSampling(Function):
     @staticmethod
     def forward(ctx, xyz, npoint):
@@ -329,4 +330,18 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
     """
     return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
 
+def ball_query(radius, nsample, x, y, batch_x=None, batch_y=None, mode=None):
+    if mode is None:
+        raise Exception('The mode should be defined within ["PARTIAL_DENSE | DENSE"]')
 
+    if mode.lower() == "partial_dense":
+        if (batch_x is None) or (batch_y is None):
+            raise Exception('batch_x and batch_y should be provided')
+        return ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y)
+
+    elif mode.lower() == "dense":
+        if (batch_x is not None) or (batch_y is not None):
+            raise Exception('batch_x and batch_y should not be provided')
+        return ball_query_dense(radius, nsample, x, y)
+    else:
+        raise Exception('unrecognized mode {}'.format(mode))

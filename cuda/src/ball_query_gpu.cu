@@ -77,12 +77,6 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 					(x[n_q * 3 + d] - y[n_s * 3 + d]);
 			}
 			if(dist <= radius2){
-				if (count == 0){
-					for(ptrdiff_t l = 0; l < nsample; ++l){
-						idx_out[n_q * nsample + l] = n_s;
-						dist_out[n_q * nsample + l] = dist;
-					}
-				}
 				idx_out[n_q * nsample + count] = n_s;
 				dist_out[n_q * nsample + count] = dist;
 				count++;

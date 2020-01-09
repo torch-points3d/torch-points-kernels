@@ -14,7 +14,7 @@ class TestBallPartial(unittest.TestCase):
         batch_x = torch.from_numpy(np.asarray([0, 0, 0])).long().cuda()
         batch_y = torch.from_numpy(np.asarray([0])).long().cuda()
 
-        idx, dist2 = ball_query_partial_dense(1, 2, x, y, batch_x, batch_y)
+        idx, dist2 = ball_query_partial_dense(10, 2, x, y, batch_x, batch_y)
 
         idx = idx.detach().cpu().numpy()
         dist2 = dist2.detach().cpu().numpy()

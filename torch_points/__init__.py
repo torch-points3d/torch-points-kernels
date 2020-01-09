@@ -1,8 +1,7 @@
 from .torchpoints import *
 
 __all__ = [
-    "ball_query_dense",
-    "ball_query_partial_dense",
+    "ball_query",
     "furthest_point_sample",
     "gather_operation",
     "grouping_operation",
