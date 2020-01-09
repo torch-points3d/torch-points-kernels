@@ -110,7 +110,7 @@ void query_ball_point_kernel_partial_wrapper(long batch_size,
 						int64_t *idx_out,
 						float *dist_out) {
 
-	query_ball_point_kernel_partial_dense<<<batch_size, THREADS>>>(
+	query_ball_point_kernel_partial_dense<<<batch_size, TOTAL_THREADS>>>(
 		size_x, size_y, radius, nsample, x, y,
 		batch_x, batch_y, idx_out, dist_out);
 
