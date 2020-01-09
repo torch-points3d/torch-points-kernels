@@ -82,16 +82,20 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 
 		i0 = 0;
 
+		int token = 0;
 		for (auto& inds : list_matches){
+			token = inds[0].first;
 			for (int j = 0; j < max_count; j++){
 				if (j < inds.size()){
 					neighbors_indices[i0 * max_count + j] = inds[j].first;
 					dists[i0 * max_count + j] = (float) inds[j].second;
+
+
 				}
 
 				else {
-					neighbors_indices[i0 * max_count + j] = -1;
-					dists[i0 * max_count + j] = radius * radius;
+					neighbors_indices[i0 * max_count + j] = token;
+					dists[i0 * max_count + j] = -1;
 				}
 			}
 			i0++;
@@ -239,8 +243,8 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 					dists[i0 * max_count + j] = (float) inds_dists[j].second;
 				}
 				else {
-					neighbors_indices[i0 * max_count + j] = supports.size();
-					dists[i0 * max_count + j] = radius * radius;
+					neighbors_indices[i0 * max_count + j] = supports.size()/3;
+					dists[i0 * max_count + j] = -1;
 				}
 
 			}

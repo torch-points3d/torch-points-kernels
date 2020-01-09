@@ -135,3 +135,23 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 	}
 	return std::make_pair(out.clone(), out_dists.clone());
 }
+
+
+std::pair<at::Tensor, at::Tensor> dense_ball_query(at::Tensor query,
+						   at::Tensor support,
+						   float radius, int max_num, int mode){
+
+	int b = query.size(0);
+	vector<at::Tensor> batch_idx;
+	vector<at::Tensor> batch_dist;
+	for (int i=0; i < b; i++){
+
+		auto out_pair = ball_query(query[i], support[i], radius, max_num, mode);
+		batch_idx.push_back(out_pair.first);
+		batch_dist.push_back(out_pair.second);
+	}
+	auto out_idx = torch::stack(batch_idx);
+	auto out_dist = torch::stack(batch_dist);
+	return std::make_pair(out_idx, out_dist);
+
+}
