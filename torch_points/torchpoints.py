@@ -292,7 +292,7 @@ class BallQueryPartialDense(Function):
                                                    batch_y,
                                                    radius, nsample)
         else:
-            ind, dist = tpcpu.dense_ball_query(x, y,
+            ind, dist = tpcpu.batch_ball_query(x, y,
                                                batch_x,
                                                batch_y,
                                                radius, nsample, mode=0)
