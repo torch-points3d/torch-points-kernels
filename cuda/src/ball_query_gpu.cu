@@ -4,8 +4,6 @@
 
 #include "cuda_utils.h"
 
-#define THREADS 1024
-
 // input: new_xyz(b, m, 3) xyz(b, n, 3)
 // output: idx(b, m, nsample)
 __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
