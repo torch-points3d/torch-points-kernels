@@ -1,6 +1,7 @@
 import unittest
 import torch
 from torch_points import ball_query_partial_dense
+from torch_cluster import radius_cuda
 import numpy.testing as npt
 import numpy as np
 

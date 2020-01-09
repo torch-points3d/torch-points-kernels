@@ -69,7 +69,7 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 	float radius2 = radius * radius;
 
 	for (ptrdiff_t n_q = start_idx_q + idx; n_q < end_idx_q; n_q += THREADS) {
-		size_t count = 0;
+		int64_t count = 0;
 		for (ptrdiff_t n_s = start_idx_s; n_s < end_idx_s; n_s++) {
 			float dist = 0;
 			for (ptrdiff_t d = 0; d < 3; d++) {
@@ -79,12 +79,12 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 			if(dist <= radius2){
 				if (count == 0){
 					for(ptrdiff_t l = 0; l < nsample; ++l){
-						idx_out[n_s * nsample + l] = n_q;
-						dist_out[n_s * nsample + l] = dist;
+						idx_out[n_q * nsample + l] = n_s;
+						dist_out[n_q * nsample + l] = dist;
 					}
 				}
-				idx_out[n_s * nsample + count] = n_q;
-				dist_out[n_s * nsample + count] = dist;
+				idx_out[n_q * nsample + count] = n_s;
+				dist_out[n_q * nsample + count] = dist;
 				count++;
 		       }
 			if(count >= nsample){
