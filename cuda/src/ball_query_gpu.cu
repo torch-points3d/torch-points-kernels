@@ -68,15 +68,17 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 	const ptrdiff_t end_idx_y = batch_y[batch_idx + 1];
 	float radius2 = radius * radius;
 
-	for (ptrdiff_t n_x = start_idx_x + idx; n_x < end_idx_x + 1; n_x += THREADS) {
+	for (ptrdiff_t n_x = start_idx_x + idx; n_x < end_idx_x; n_x += THREADS) {
+		printf("n_x: %d \n", n_x);
+
 		int64_t count = 0;
-		for (ptrdiff_t n_y = start_idx_y; n_y < end_idx_y + 1; n_y++) {
+		for (ptrdiff_t n_y = start_idx_y; n_y < end_idx_y; n_y++) {
 			float dist = 0;
 			for (ptrdiff_t d = 0; d < 3; d++) {
 				dist += (x[n_x * 3 + d] - y[n_y * 3 + d]) *
 					(x[n_x * 3 + d] - y[n_y * 3 + d]);
 			}
-			printf("Hello from (%d, %d) block, %d, thread %d\n", n_x, n_y, blockIdx.x, threadIdx.x);
+			printf("n_x: %d, n_y: %d \n", n_x, n_y);
 			if(dist <= radius2){
 				idx_out[n_x * nsample + count] = n_y;
 				dist_out[n_x * nsample + count] = dist;

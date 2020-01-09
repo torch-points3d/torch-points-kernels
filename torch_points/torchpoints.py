@@ -330,7 +330,7 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
     """
     return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
 
-def ball_query(radius, nsample, x, y, batch_x=None, batch_y=None, mode=None):
+def ball_query(radius: float, nsample: int, x, y, batch_x=None, batch_y=None, mode=None):
     if mode is None:
         raise Exception('The mode should be defined within ["PARTIAL_DENSE | DENSE"]')
 
