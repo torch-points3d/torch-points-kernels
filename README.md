@@ -17,6 +17,12 @@ import torch
 import torch_points.points_cuda
 ```
 
+## Build and test
+```
+python setup.py build_ext --inplace
+python -m unittest
+```
+
 ## Projects using those kernels.
 
 [```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks) by 
