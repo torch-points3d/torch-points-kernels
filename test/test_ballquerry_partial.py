@@ -5,7 +5,6 @@ from torch_cluster import radius_cuda
 import numpy.testing as npt
 import numpy as np
 
-
 class TestBallPartial(unittest.TestCase):
     def test_simple_gpu(self):
         x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [0.1, 0, 0]]).to(torch.float).cuda()
@@ -26,8 +25,6 @@ class TestBallPartial(unittest.TestCase):
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
-
-
 
 if __name__ == "__main__":
     unittest.main()

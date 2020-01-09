@@ -319,14 +319,15 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
     y : torch.Tensor
         (N, npoint, 3) centers of the ball query
     batch_x : torch.Tensor
-        (M, ) Contains indexes to indicate within batch it belongs to 
+        (M, ) Contains indexes to indicate within batch it belongs to. 
     batch_y : torch.Tensor
         (N, ) Contains indexes to indicate within batch it belongs to  
 
     Returns
     -------
     torch.Tensor
-        (B, npoint, nsample) tensor with the indicies of the features that form the query balls
+        idx: (M, nsample) Default value: N. It contains the indexes of the element within y at radius distance to x
+        dist2: (M, nsample) Default value: -1. It contains the square distances of the element within y at radius distance to x
     """
     return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
 
