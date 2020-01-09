@@ -295,7 +295,7 @@ class BallQueryPartialDense(Function):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if x.is_cuda:
                 return tpcuda.ball_query_partial_dense(x, y,
-                                                       batch_y,
+                                                       batch_x,
                                                        batch_y,
                                                        radius, nsample)
         else:
@@ -337,6 +337,8 @@ def ball_query(radius, nsample, x, y, batch_x=None, batch_y=None, mode=None):
     if mode.lower() == "partial_dense":
         if (batch_x is None) or (batch_y is None):
             raise Exception('batch_x and batch_y should be provided')
+        assert x.size(0) == batch_x.size(0)
+        assert y.size(0) == batch_y.size(0)
         return ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y)
 
     elif mode.lower() == "dense":

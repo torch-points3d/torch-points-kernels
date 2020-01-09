@@ -61,24 +61,25 @@ __global__ void query_ball_point_kernel_partial_dense(int size_x,
 	const ptrdiff_t batch_idx = blockIdx.x;
 	const ptrdiff_t idx = threadIdx.x;
 
-	const ptrdiff_t start_idx_q = batch_x[batch_idx];
-	const ptrdiff_t end_idx_q = batch_x[batch_idx + 1];
+	const ptrdiff_t start_idx_x = batch_x[batch_idx];
+	const ptrdiff_t end_idx_x = batch_x[batch_idx + 1];
 
-	const ptrdiff_t start_idx_s = batch_y[batch_idx];
-	const ptrdiff_t end_idx_s = batch_y[batch_idx + 1];
+	const ptrdiff_t start_idx_y = batch_y[batch_idx];
+	const ptrdiff_t end_idx_y = batch_y[batch_idx + 1];
 	float radius2 = radius * radius;
 
-	for (ptrdiff_t n_q = start_idx_q + idx; n_q < end_idx_q; n_q += THREADS) {
+	for (ptrdiff_t n_x = start_idx_x + idx; n_x < end_idx_x + 1; n_x += THREADS) {
 		int64_t count = 0;
-		for (ptrdiff_t n_s = start_idx_s; n_s < end_idx_s; n_s++) {
+		for (ptrdiff_t n_y = start_idx_y; n_y < end_idx_y + 1; n_y++) {
 			float dist = 0;
 			for (ptrdiff_t d = 0; d < 3; d++) {
-				dist += (x[n_q * 3 + d] - y[n_s * 3 + d]) *
-					(x[n_q * 3 + d] - y[n_s * 3 + d]);
+				dist += (x[n_x * 3 + d] - y[n_y * 3 + d]) *
+					(x[n_x * 3 + d] - y[n_y * 3 + d]);
 			}
+			printf("Hello from (%d, %d) block, %d, thread %d\n", n_x, n_y, blockIdx.x, threadIdx.x);
 			if(dist <= radius2){
-				idx_out[n_q * nsample + count] = n_s;
-				dist_out[n_q * nsample + count] = dist;
+				idx_out[n_x * nsample + count] = n_y;
+				dist_out[n_x * nsample + count] = dist;
 				count++;
 		       }
 			if(count >= nsample){
