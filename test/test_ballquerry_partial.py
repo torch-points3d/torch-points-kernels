@@ -13,8 +13,6 @@ class TestBallPartial(unittest.TestCase):
         batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long().cuda()
         batch_y = torch.from_numpy(np.asarray([0])).long().cuda()
         
-        print(x.shape, y.shape, batch_x.shape, batch_y.shape)
-
         batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long().cuda()
         batch_y = torch.from_numpy(np.asarray([0])).long().cuda()
 
@@ -23,11 +21,11 @@ class TestBallPartial(unittest.TestCase):
         idx = idx.detach().cpu().numpy()
         dist2 = dist2.detach().cpu().numpy()
 
-        print(idx)
-        print(dist2)
+        idx_answer = np.asarray([[1, 1], [0, 1], [1, 1], [1, 1]])
+        dist2_answer = np.asarray([[-1, -1], [0.01, -1], [-1, -1], [-1, -1]]).astype(np.float32)
 
-        #npt.assert_array_equal(idx, )
-        #npt.assert_array_equal(dist2, np.asarray([[0.3, 0.1]]))
+        npt.assert_array_almost_equal(idx, idx_answer)
+        npt.assert_array_almost_equal(dist2, dist2_answer)
 
 
 

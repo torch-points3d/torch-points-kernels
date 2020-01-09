@@ -69,6 +69,7 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 
 	at::Tensor idx = torch::full({x.size(0), nsample}, y.size(0),
 				      at::device(x.device()).dtype(at::ScalarType::Long));
+	
 	at::Tensor dist = torch::full({x.size(0), nsample}, -1,
 				      at::device(x.device()).dtype(at::ScalarType::Float));
 
@@ -78,14 +79,10 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 				cudaMemcpyDeviceToHost);
 	auto batch_size = batch_sizes[0] + 1;
 
-	std::cout << batch_x << std::endl;
 	batch_x = degree(batch_x, batch_size);
 	batch_x = at::cat({at::zeros(1, batch_x.options()), batch_x.cumsum(0)}, 0);
 	batch_y = degree(batch_y, batch_size);
 	batch_y = at::cat({at::zeros(1, batch_y.options()), batch_y.cumsum(0)}, 0);
-
-	std::cout << batch_x << std::endl;
-	std::cout << batch_y << std::endl;
 
 	if (x.type().is_cuda()) {
 		query_ball_point_kernel_partial_wrapper(batch_size,
