@@ -9,7 +9,6 @@ if torch.cuda.is_available():
     import torch_points.points_cuda as tpcuda
 
 
-
 class FurthestPointSampling(Function):
     @staticmethod
     def forward(ctx, xyz, npoint):
@@ -77,7 +76,7 @@ def gather_operation(features, idx):
            (B, C, N) tensor
 
        idx : torch.Tensor
-           (B, npoint, nsample) tensor of the features to gather
+           (B, npoint) tensor of the features to gather
 
        Returns
        -------
@@ -289,15 +288,16 @@ def ball_query_dense(radius, nsample, xyz, new_xyz):
     """
     return BallQueryDense.apply(radius, nsample, xyz, new_xyz)
 
+
 class BallQueryPartialDense(Function):
     @staticmethod
     def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if x.is_cuda:
-                return tpcuda.ball_query_partial_dense(x, y,
-                                                       batch_x,
-                                                       batch_y,
-                                                       radius, nsample)
+            return tpcuda.ball_query_partial_dense(x, y,
+                                                   batch_x,
+                                                   batch_y,
+                                                   radius, nsample)
         else:
             raise NotImplementedError
 
@@ -315,7 +315,7 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
     nsample : int
         maximum number of features in the balls
     x : torch.Tensor
-        (M, 3) xyz coordinates of the features
+        (M, 3) xyz coordinates of the features (The neighbours are going to be looked for there)
     y : torch.Tensor
         (N, npoint, 3) centers of the ball query
     batch_x : torch.Tensor
@@ -326,10 +326,11 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
     Returns
     -------
     torch.Tensor
-        idx: (M, nsample) Default value: N. It contains the indexes of the element within y at radius distance to x
-        dist2: (M, nsample) Default value: -1. It contains the square distances of the element within y at radius distance to x
+        idx: (N, nsample) Default value: N. It contains the indexes of the element within y at radius distance to x
+        dist2: (N, nsample) Default value: -1. It contains the square distances of the element within y at radius distance to x
     """
     return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
+
 
 def ball_query(radius: float, nsample: int, x, y, batch_x=None, batch_y=None, mode=None):
     if mode is None:

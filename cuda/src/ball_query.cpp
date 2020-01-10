@@ -28,8 +28,7 @@ at::Tensor ball_query_dense(at::Tensor new_xyz, at::Tensor xyz, const float radi
     CHECK_CUDA(xyz);
   }
 
-  at::Tensor idx =
-      torch::zeros({new_xyz.size(0), new_xyz.size(1), nsample},
+  at::Tensor idx = torch::zeros({new_xyz.size(0), new_xyz.size(1), nsample},
                    at::device(new_xyz.device()).dtype(at::ScalarType::Int));
 
   if (new_xyz.type().is_cuda()) {
@@ -67,11 +66,11 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 		CHECK_CUDA(batch_y);
 	}
 
-	at::Tensor idx = torch::full({x.size(0), nsample}, y.size(0),
-				      at::device(x.device()).dtype(at::ScalarType::Long));
+	at::Tensor idx = torch::full({y.size(0), nsample}, x.size(0),
+				at::device(y.device()).dtype(at::ScalarType::Long));
 	
-	at::Tensor dist = torch::full({x.size(0), nsample}, -1,
-				      at::device(x.device()).dtype(at::ScalarType::Float));
+	at::Tensor dist = torch::full({y.size(0), nsample}, -1,
+			    at::device(y.device()).dtype(at::ScalarType::Float));
 
 	cudaSetDevice(x.get_device());
 	auto batch_sizes = (int64_t *)malloc(sizeof(int64_t));
