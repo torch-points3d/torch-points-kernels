@@ -2,6 +2,7 @@ import torch
 from torch.autograd import Function
 import torch.nn as nn
 import sys
+from typing import Optional
 
 import torch_points.points_cpu as tpcpu
 
@@ -268,27 +269,6 @@ class BallQueryDense(Function):
         return None, None, None, None
 
 
-def ball_query_dense(radius, nsample, xyz, new_xyz):
-    r"""
-    Parameters
-    ----------
-    radius : float
-        radius of the balls
-    nsample : int
-        maximum number of features in the balls
-    xyz : torch.Tensor
-        (B, N, 3) xyz coordinates of the features
-    new_xyz : torch.Tensor
-        (B, npoint, 3) centers of the ball query
-
-    Returns
-    -------
-    torch.Tensor
-        (B, npoint, nsample) tensor with the indicies of the features that form the query balls
-    """
-    return BallQueryDense.apply(radius, nsample, xyz, new_xyz)
-
-
 class BallQueryPartialDense(Function):
     @staticmethod
     def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
@@ -306,46 +286,41 @@ class BallQueryPartialDense(Function):
         return None, None, None, None
 
 
-def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y):
-    r"""
-    Parameters
-    ----------
-    radius : float
-        radius of the balls
-    nsample : int
-        maximum number of features in the balls
-    x : torch.Tensor
-        (M, 3) xyz coordinates of the features (The neighbours are going to be looked for there)
-    y : torch.Tensor
-        (N, npoint, 3) centers of the ball query
-    batch_x : torch.Tensor
-        (M, ) Contains indexes to indicate within batch it belongs to. 
-    batch_y : torch.Tensor
-        (N, ) Contains indexes to indicate within batch it belongs to  
+def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mode: Optional[str] = 'dense',
+               batch_x: Optional[torch.tensor] = None, batch_y: Optional[torch.tensor] = None) -> torch.Tensor:
+    """    
+    Arguments:
+        radius {float} -- radius of the balls
+        nsample {int} -- maximum number of features in the balls
+        x {torch.Tensor} --  
+            (M, 3) [partial_dense] or (B, M, 3) [dense] xyz coordinates of the features
+        y {torch.Tensor} -- 
+            (npoint, 3) [partial_dense] or or (B, npoint, 3) [dense] centers of the ball query
+        mode {str} -- switch between "dense" or "partial_dense" data layout
 
-    Returns
-    -------
-    torch.Tensor
-        idx: (N, nsample) Default value: N. It contains the indexes of the element within y at radius distance to x
-        dist2: (N, nsample) Default value: -1. It contains the square distances of the element within y at radius distance to x
+    Keyword Arguments:
+        batch_x {Optional[torch.tensor]} -- (M, ) Contains indexes to indicate within batch it belongs to. 
+        batch_y {Optional[torch.tensor]} -- (N, ) Contains indexes to indicate within batch it belongs to  
+
+
+    Returns:
+        [type] -- [description]
     """
-    return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
-
-
-def ball_query(radius: float, nsample: int, x, y, batch_x=None, batch_y=None, mode=None):
     if mode is None:
-        raise Exception('The mode should be defined within ["PARTIAL_DENSE | DENSE"]')
+        raise Exception('The mode should be defined within ["partial_dense | dense"]')
 
     if mode.lower() == "partial_dense":
         if (batch_x is None) or (batch_y is None):
             raise Exception('batch_x and batch_y should be provided')
         assert x.size(0) == batch_x.size(0)
         assert y.size(0) == batch_y.size(0)
-        return ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y)
+        assert x.dim() == 2
+        return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
 
     elif mode.lower() == "dense":
         if (batch_x is not None) or (batch_y is not None):
             raise Exception('batch_x and batch_y should not be provided')
-        return ball_query_dense(radius, nsample, x, y)
+        assert x.dim() == 3
+        return BallQueryDense.apply(radius, nsample, x, y)
     else:
         raise Exception('unrecognized mode {}'.format(mode))
