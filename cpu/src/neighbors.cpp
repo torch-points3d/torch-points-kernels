@@ -190,10 +190,10 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 	search_params.sorted = true;
 	for (auto& p0 : query_pcd.pts){
 // Check if we changed batch
-
-		if (i0 == sum_qb + q_batches[b]){
+		if (i0 == sum_qb + q_batches[b] && b < s_batches.size()){
 			sum_qb += q_batches[b];
 			sum_sb += s_batches[b];
+
 			b++;
 
 // Change the points
@@ -201,13 +201,19 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 			current_cloud.set_batch(supports, sum_sb, s_batches[b]);
 // Build KDTree of the current element of the batch
 			delete index;
+
 			index = new my_kd_tree_t(3, current_cloud, tree_params);
 			index->buildIndex();
 		}
 // Initial guess of neighbors size
+
+
 		all_inds_dists[i0].reserve(max_count);
 // Find neighbors
+		//std::cerr << p0.x << p0.y << p0.z<<std::endl;
 		scalar_t query_pt[3] = { p0.x, p0.y, p0.z};
+
+
 		size_t nMatches = index->radiusSearch(query_pt, r2, all_inds_dists[i0], search_params);
 // Update max count
 
@@ -221,8 +227,10 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 		max_count = max_num;
 	}
 // Reserve the memory
+
 	if(mode == 0){
 		neighbors_indices.resize(query_pcd.pts.size() * max_count);
+
 		dists.resize(query_pcd.pts.size() * max_count);
 		i0 = 0;
 		sum_sb = 0;
@@ -230,6 +238,7 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 		b = 0;
 
 		for (auto& inds_dists : all_inds_dists){// Check if we changed batch
+
 
 			if (i0 == sum_qb + q_batches[b]){
 				sum_qb += q_batches[b];
