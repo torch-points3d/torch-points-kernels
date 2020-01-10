@@ -299,12 +299,14 @@ def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mo
         mode {str} -- switch between "dense" or "partial_dense" data layout
 
     Keyword Arguments:
-        batch_x {Optional[torch.tensor]} -- (M, ) Contains indexes to indicate within batch it belongs to. 
-        batch_y {Optional[torch.tensor]} -- (N, ) Contains indexes to indicate within batch it belongs to  
+        batch_x -- (M, ) Contains indexes to indicate within batch it belongs to. 
+        batch_y -- (N, ) Contains indexes to indicate within batch it belongs to  
 
 
     Returns:
-        [type] -- [description]
+        idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
+        OPTIONAL[partial_dense] dist2: (N, nsample) Default value: -1.
+                 It contains the square distances of the element within x at radius distance to y
     """
     if mode is None:
         raise Exception('The mode should be defined within ["partial_dense | dense"]')
