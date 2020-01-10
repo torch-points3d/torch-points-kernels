@@ -35,7 +35,7 @@ ext_modules.append(
 
 setup(
     name="torch_points",
-    version="0.1.3",
+    version="0.1.4",
     author="Nicolas Chaulet",
     packages=find_packages(),
     install_requires=[],
