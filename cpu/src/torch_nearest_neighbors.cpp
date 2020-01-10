@@ -61,20 +61,22 @@ std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor query,
 
 void cumsum(const vector<long>& batch, vector<long>& res){
 
-	res.resize(batch[batch.size()-1]-batch[0]+1, 0);
+	res.resize(batch[batch.size()-1]-batch[0]+2, 0);
 	long ind = batch[0];
 	long incr = 1;
-	for(int i=1; i < batch.size(); i++){
-
-		if(batch[i] == ind)
-			incr++;
-		else{
-			res[ind-batch[0]] = incr;
-			incr =1;
-			ind = batch[i];
+	if(res.size() > 1){
+		for(int i=1; i < batch.size(); i++){
+			if(batch[i] == ind)
+				incr++;
+			else{
+				res[ind-batch[0]+1] = incr;
+				incr =1;
+				ind = batch[i];
+			}
 		}
+
 	}
-	res[ind-batch[0]] = incr;
+	res[ind-batch[0]+1] = incr;
 }
 
 std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
@@ -89,9 +91,11 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 	std::vector<long> query_batch_stl = std::vector<long>(data_qb, data_qb+query_batch.size(0));
 	std::vector<long> cumsum_query_batch_stl;
 	cumsum(query_batch_stl, cumsum_query_batch_stl);
+
 	std::vector<long> support_batch_stl = std::vector<long>(data_sb, data_sb+support_batch.size(0));
 	std::vector<long> cumsum_support_batch_stl;
 	cumsum(support_batch_stl, cumsum_support_batch_stl);
+
 	std::vector<long> neighbors_indices;
 
 	auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
@@ -107,6 +111,7 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 	std::vector<scalar_t> supports_stl = std::vector<scalar_t>(data_s,
 								   data_s + support.size(0)*support.size(1));
 
+
 	max_count = batch_nanoflann_neighbors<scalar_t>(queries_stl,
 							supports_stl,
 							cumsum_query_batch_stl,
@@ -117,6 +122,7 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 							max_num,
 							mode);
 	});
+
 	long* neighbors_indices_ptr = neighbors_indices.data();
 	auto neighbors_dists_ptr = neighbors_dists.data();
 
@@ -134,4 +140,24 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 					     options=options_dist);
 	}
 	return std::make_pair(out.clone(), out_dists.clone());
+}
+
+
+std::pair<at::Tensor, at::Tensor> dense_ball_query(at::Tensor query,
+						   at::Tensor support,
+						   float radius, int max_num, int mode){
+
+	int b = query.size(0);
+	vector<at::Tensor> batch_idx;
+	vector<at::Tensor> batch_dist;
+	for (int i=0; i < b; i++){
+
+		auto out_pair = ball_query(query[i], support[i], radius, max_num, mode);
+		batch_idx.push_back(out_pair.first);
+		batch_dist.push_back(out_pair.second);
+	}
+	auto out_idx = torch::stack(batch_idx);
+	auto out_dist = torch::stack(batch_dist);
+	return std::make_pair(out_idx, out_dist);
+
 }
