@@ -6,5 +6,5 @@ __all__ = [
     "gather_operation",
     "grouping_operation",
     "three_interpolate",
-    "three_nn"
+    "three_nn",
 ]
