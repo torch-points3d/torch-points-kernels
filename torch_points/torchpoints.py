@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Function
 import torch.nn as nn
 import sys
-from typing import Optional
+from typing import Optional, Any, Tuple
 
 import torch_points.points_cpu as tpcpu
 
