@@ -13,12 +13,3 @@ repos:
       hooks:
           - id: black
             language_version: python3.6
-
-    - repo: local
-      hooks:
-          - id: clang-format
-            name: Run clang-format
-            entry: clang-format --style google -i
-            types: [text]
-            files: '.*\.cpp$|.*\.h$|.*\.cu$|.*\.hpp$'
-            language: system
