@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Function
 import torch.nn as nn
 import sys
-from typing import Optional
+from typing import Optional, Any, Tuple
 
 import torch_points.points_cpu as tpcpu
 
@@ -159,9 +159,7 @@ class ThreeInterpolate(Function):
         idx, weight, m = ctx.three_interpolate_for_backward
 
         if grad_out.is_cuda:
-            grad_features = tpcuda.three_interpolate_grad(
-                grad_out.contiguous(), idx, weight, m
-            )
+            grad_features = tpcuda.three_interpolate_grad(grad_out.contiguous(), idx, weight, m)
         else:
             raise NotImplementedError
 
@@ -265,13 +263,9 @@ class BallQueryPartialDense(Function):
     def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if x.is_cuda:
-            return tpcuda.ball_query_partial_dense(
-                x, y, batch_x, batch_y, radius, nsample
-            )
+            return tpcuda.ball_query_partial_dense(x, y, batch_x, batch_y, radius, nsample)
         else:
-            ind, dist = tpcpu.batch_ball_query(
-                x, y, batch_x, batch_y, radius, nsample, mode=0
-            )
+            ind, dist = tpcpu.batch_ball_query(x, y, batch_x, batch_y, radius, nsample, mode=0)
             return ind, dist
 
     @staticmethod
@@ -288,19 +282,19 @@ def ball_query(
     batch_x: Optional[torch.tensor] = None,
     batch_y: Optional[torch.tensor] = None,
 ) -> torch.Tensor:
-    """    
+    """
     Arguments:
         radius {float} -- radius of the balls
         nsample {int} -- maximum number of features in the balls
-        x {torch.Tensor} --  
+        x {torch.Tensor} --
             (M, 3) [partial_dense] or (B, M, 3) [dense] xyz coordinates of the features
-        y {torch.Tensor} -- 
+        y {torch.Tensor} --
             (npoint, 3) [partial_dense] or or (B, npoint, 3) [dense] centers of the ball query
         mode {str} -- switch between "dense" or "partial_dense" data layout
 
     Keyword Arguments:
-        batch_x -- (M, ) [partial_dense] or (B, M, 3) [dense] Contains indexes to indicate within batch it belongs to. 
-        batch_y -- (N, ) Contains indexes to indicate within batch it belongs to  
+        batch_x -- (M, ) [partial_dense] or (B, M, 3) [dense] Contains indexes to indicate within batch it belongs to.
+        batch_y -- (N, ) Contains indexes to indicate within batch it belongs to
 
 
     Returns:
@@ -326,4 +320,3 @@ def ball_query(
         return BallQueryDense.apply(radius, nsample, x, y)
     else:
         raise Exception("unrecognized mode {}".format(mode))
-

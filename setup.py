@@ -8,9 +8,7 @@ from torch.utils.cpp_extension import (
 import glob
 
 ext_src_root = "cuda"
-ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob(
-    "{}/src/*.cu".format(ext_src_root)
-)
+ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob("{}/src/*.cu".format(ext_src_root))
 
 ext_modules = []
 if CUDA_HOME:
@@ -32,17 +30,15 @@ ext_modules.append(
     CppExtension(
         name="torch_points.points_cpu",
         sources=cpu_ext_sources,
-        extra_compile_args={
-            "cxx": ["-O2", "-I{}".format("{}/include".format(cpu_ext_src_root))],
-        },
+        extra_compile_args={"cxx": ["-O2", "-I{}".format("{}/include".format(cpu_ext_src_root))],},
     )
 )
 
-requirements = ["torch^1.1.0"]
+requirements = ["torch>=1.1.0"]
 
 setup(
     name="torch_points",
-    version="0.1.5",
+    version="0.1.6",
     author="Nicolas Chaulet",
     packages=find_packages(),
     install_requires=requirements,
