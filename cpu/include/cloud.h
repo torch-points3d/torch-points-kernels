@@ -57,6 +57,7 @@ struct PointCloud
 		pts = temp;
 	}
 	void set_batch(std::vector<scalar_t> new_pts, int begin, int size){
+
 		std::vector<PointXYZ> temp(size);
 		for(int i=0; i < size; i++){
 			PointXYZ point;

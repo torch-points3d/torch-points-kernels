@@ -252,17 +252,8 @@ class BallQueryDense(Function):
         if new_xyz.is_cuda:
             return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
         else:
-            b = xyz.size(0)
-            npoints = new_xyz.size(1)
-            n = xyz.size(1)
-            batch_new_xyz = torch.arange(0, b, dtype=torch.long).repeat(npoints, 1).T.reshape(-1)
-            batch_xyz = torch.arange(0, b, dtype=torch.long).repeat(n, 1).T.reshape(-1)
-            ind, dist = tpcpu.batch_ball_query(new_xyz.view(-1, 3),
-                                               xyz.view(-1, 3),
-                                               batch_new_xyz,
-                                               batch_xyz,
-                                               radius, nsample)
-            return ind.view(b, npoints, nsample)
+            ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
+            return ind
 
     @staticmethod
     def backward(ctx, a=None):
@@ -274,20 +265,29 @@ class BallQueryPartialDense(Function):
     def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
         # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
         if x.is_cuda:
-            return tpcuda.ball_query_partial_dense(x, y,
-                                                   batch_x,
-                                                   batch_y,
-                                                   radius, nsample)
+            return tpcuda.ball_query_partial_dense(
+                x, y, batch_x, batch_y, radius, nsample
+            )
         else:
-            raise NotImplementedError
+            ind, dist = tpcpu.batch_ball_query(
+                x, y, batch_x, batch_y, radius, nsample, mode=0
+            )
+            return ind, dist
 
     @staticmethod
     def backward(ctx, a=None):
         return None, None, None, None
 
 
-def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mode: Optional[str] = 'dense',
-               batch_x: Optional[torch.tensor] = None, batch_y: Optional[torch.tensor] = None) -> torch.Tensor:
+def ball_query(
+    radius: float,
+    nsample: int,
+    x: torch.Tensor,
+    y: torch.Tensor,
+    mode: Optional[str] = "dense",
+    batch_x: Optional[torch.tensor] = None,
+    batch_y: Optional[torch.tensor] = None,
+) -> torch.Tensor:
     """    
     Arguments:
         radius {float} -- radius of the balls
@@ -299,7 +299,7 @@ def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mo
         mode {str} -- switch between "dense" or "partial_dense" data layout
 
     Keyword Arguments:
-        batch_x -- (M, ) Contains indexes to indicate within batch it belongs to. 
+        batch_x -- (M, ) [partial_dense] or (B, M, 3) [dense] Contains indexes to indicate within batch it belongs to. 
         batch_y -- (N, ) Contains indexes to indicate within batch it belongs to  
 
 
@@ -313,7 +313,7 @@ def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mo
 
     if mode.lower() == "partial_dense":
         if (batch_x is None) or (batch_y is None):
-            raise Exception('batch_x and batch_y should be provided')
+            raise Exception("batch_x and batch_y should be provided")
         assert x.size(0) == batch_x.size(0)
         assert y.size(0) == batch_y.size(0)
         assert x.dim() == 2
@@ -321,8 +321,9 @@ def ball_query(radius: float, nsample: int, x: torch.Tensor, y: torch.Tensor, mo
 
     elif mode.lower() == "dense":
         if (batch_x is not None) or (batch_y is not None):
-            raise Exception('batch_x and batch_y should not be provided')
+            raise Exception("batch_x and batch_y should not be provided")
         assert x.dim() == 3
         return BallQueryDense.apply(radius, nsample, x, y)
     else:
-        raise Exception('unrecognized mode {}'.format(mode))
+        raise Exception("unrecognized mode {}".format(mode))
+
