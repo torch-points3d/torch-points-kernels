@@ -1,3 +1,7 @@
+name: Unittests
+
+on: [push]
+
 jobs:
     unittests:
         runs-on: ubuntu-latest
