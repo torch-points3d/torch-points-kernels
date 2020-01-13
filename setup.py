@@ -34,7 +34,7 @@ ext_modules.append(
     )
 )
 
-requirements = ["torch"]
+requirements = ["torch>=1.1.0"]
 
 setup(
     name="torch_points",
