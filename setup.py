@@ -1,5 +1,10 @@
 from setuptools import setup, find_packages
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME, CppExtension
+from torch.utils.cpp_extension import (
+    BuildExtension,
+    CUDAExtension,
+    CUDA_HOME,
+    CppExtension,
+)
 import glob
 
 ext_src_root = "cuda"
@@ -33,12 +38,14 @@ ext_modules.append(
     )
 )
 
+requirements = ["torch^1.1.0"]
+
 setup(
     name="torch_points",
-    version="0.1.3",
+    version="0.1.5",
     author="Nicolas Chaulet",
     packages=find_packages(),
-    install_requires=[],
+    install_requires=requirements,
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension},
 )
