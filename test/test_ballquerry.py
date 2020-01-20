@@ -3,6 +3,7 @@ import torch
 from torch_points import ball_query
 import numpy.testing as npt
 import numpy as np
+from sklearn.neighbors import KDTree
 
 from . import run_if_cuda
 
@@ -54,23 +55,23 @@ class TestBallPartial(unittest.TestCase):
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
 
-    # def test_simple_cpu(self):
-    #     x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [0.1, 0, 0]]).to(torch.float)
-    #     y = torch.tensor([[0, 0, 0]]).to(torch.float)
+    def test_simple_cpu(self):
+        x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [0.1, 0, 0]]).to(torch.float)
+        y = torch.tensor([[0, 0, 0]]).to(torch.float)
 
-    #     batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long()
-    #     batch_y = torch.from_numpy(np.asarray([0])).long()
+        batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long()
+        batch_y = torch.from_numpy(np.asarray([0])).long()
 
-    #     idx, dist2 = ball_query(1.0, 2, x, y, mode="PARTIAL_DENSE", batch_x=batch_x, batch_y=batch_y)
+        idx, dist2 = ball_query(1.0, 2, x, y, mode="PARTIAL_DENSE", batch_x=batch_x, batch_y=batch_y)
 
-    #     idx = idx.detach().cpu().numpy()
-    #     dist2 = dist2.detach().cpu().numpy()
+        idx = idx.detach().cpu().numpy()
+        dist2 = dist2.detach().cpu().numpy()
 
-    #     idx_answer = np.asarray([[1, 1], [0, 1], [1, 1], [1, 1]])
-    #     dist2_answer = np.asarray([[-1, -1], [0.01, -1], [-1, -1], [-1, -1]]).astype(np.float32)
+        idx_answer = np.asarray([[1, 1], [0, 1], [1, 1], [1, 1]])
+        dist2_answer = np.asarray([[-1, -1], [0.01, -1], [-1, -1], [-1, -1]]).astype(np.float32)
 
-    #     npt.assert_array_almost_equal(idx, idx_answer)
-    #     npt.assert_array_almost_equal(dist2, dist2_answer)
+        npt.assert_array_almost_equal(idx, idx_answer)
+        npt.assert_array_almost_equal(dist2, dist2_answer)
 
     def test_random_cpu(self):
         a = torch.randn(1000, 3).to(torch.float)
@@ -79,6 +80,19 @@ class TestBallPartial(unittest.TestCase):
         batch_b = torch.randint(1, (1500,)).sort(0)[0].long()
         idx, dist = ball_query(1.0, 12, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
         idx2, dist2 = ball_query(1.0, 12, b, a, mode="PARTIAL_DENSE", batch_x=batch_b, batch_y=batch_a)
+
+        zeros = torch.zeros_like(batch_b)
+        idx3, dist3 = ball_query(0.5, 17, b, b, mode="PARTIAL_DENSE", batch_x=zeros, batch_y=zeros)
+
+
+        # Comparison to see if we have the same result
+        tree = KDTree(b.detach().numpy())
+        idx3_sk = tree.query_radius(b.detach().numpy(), r=0.5)
+        i = np.random.randint(len(batch_b))
+        for p in idx3[i].detach().numpy():
+            if p < len(batch_b):
+                assert p in idx3_sk[i]
+
 
 
 if __name__ == "__main__":

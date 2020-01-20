@@ -59,24 +59,10 @@ std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor query,
 	return std::make_pair(out.clone(), out_dists.clone());
 }
 
-void cumsum(const vector<long>& batch, vector<long>& res){
-
-	res.resize(batch[batch.size()-1]-batch[0]+2, 0);
-	long ind = batch[0];
-	long incr = 1;
-	if(res.size() > 1){
-		for(int i=1; i < batch.size(); i++){
-			if(batch[i] == ind)
-				incr++;
-			else{
-				res[ind-batch[0]+1] = incr;
-				incr =1;
-				ind = batch[i];
-			}
-		}
-
-	}
-	res[ind-batch[0]+1] = incr;
+at::Tensor degree(at::Tensor row, int64_t num_nodes) {
+	auto zero = at::zeros(num_nodes, row.options());
+	auto one = at::ones(row.size(0), row.options());
+	return zero.scatter_add_(0, row, one);
 }
 
 std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
@@ -84,62 +70,60 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 						   at::Tensor query_batch,
 						   at::Tensor support_batch,
 						   float radius, int max_num, int mode) {
-	at::Tensor out;
-	at::Tensor out_dists;
-	auto data_qb = query_batch.DATA_PTR<long>();
-	auto data_sb = support_batch.DATA_PTR<long>();
-	std::vector<long> query_batch_stl = std::vector<long>(data_qb, data_qb+query_batch.size(0));
-	std::vector<long> cumsum_query_batch_stl;
-	cumsum(query_batch_stl, cumsum_query_batch_stl);
+	at::Tensor idx;
 
-	std::vector<long> support_batch_stl = std::vector<long>(data_sb, data_sb+support_batch.size(0));
-	std::vector<long> cumsum_support_batch_stl;
-	cumsum(support_batch_stl, cumsum_support_batch_stl);
-
+	at::Tensor dist;
 	std::vector<long> neighbors_indices;
+	std::vector<float> neighbors_dists;
 
 	auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
 	auto options_dist = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
+
 	int max_count = 0;
-	std::vector<float> neighbors_dists;
+	auto batch_access = query_batch.accessor<int64_t, 1>();
+	auto batch_size = batch_access[-1] + 1;
+	query_batch = degree(query_batch, batch_size);
+	query_batch = at::cat({at::zeros(1, query_batch.options()), query_batch.cumsum(0)}, 0);
+	support_batch = degree(support_batch, batch_size);
+	support_batch = at::cat({at::zeros(1, support_batch.options()), support_batch.cumsum(0)}, 0);
+	std::vector<long> query_batch_stl(query_batch.DATA_PTR<long>(), query_batch.DATA_PTR<long>() + query_batch.numel());
+	std::vector<long> support_batch_stl(support_batch.DATA_PTR<long>(), support_batch.DATA_PTR<long>() + support_batch.numel());
+
 	AT_DISPATCH_ALL_TYPES(query.scalar_type(), "batch_radius_search", [&] {
 
-	auto data_q = query.DATA_PTR<scalar_t>();
-	auto data_s = support.DATA_PTR<scalar_t>();
-	std::vector<scalar_t> queries_stl = std::vector<scalar_t>(data_q,
-								  data_q + query.size(0)*query.size(1));
-	std::vector<scalar_t> supports_stl = std::vector<scalar_t>(data_s,
-								   data_s + support.size(0)*support.size(1));
+        std::vector<scalar_t> queries_stl(query.DATA_PTR<scalar_t>(), query.DATA_PTR<scalar_t>() + query.numel());
+	std::vector<scalar_t> supports_stl(support.DATA_PTR<scalar_t>(), support.DATA_PTR<scalar_t>() + support.numel());
 
 
-	max_count = batch_nanoflann_neighbors<scalar_t>(queries_stl,
+        max_count = batch_nanoflann_neighbors<scalar_t>(queries_stl,
 							supports_stl,
-							cumsum_query_batch_stl,
-							cumsum_support_batch_stl,
+							query_batch_stl,
+							support_batch_stl,
 							neighbors_indices,
 							neighbors_dists,
 							radius,
 							max_num,
 							mode);
+
+
 	});
-
-	long* neighbors_indices_ptr = neighbors_indices.data();
 	auto neighbors_dists_ptr = neighbors_dists.data();
-
-
+	long* neighbors_indices_ptr = neighbors_indices.data();
 	if(mode == 0){
-		out = torch::from_blob(neighbors_indices_ptr, {query.size(0), max_count}, options=options);
-		out_dists = torch::from_blob(neighbors_dists_ptr,
-	 				     {query.size(0), max_count},
-	 				     options=options_dist);
+		idx = torch::from_blob(neighbors_indices_ptr, {query.size(0), max_count}, options=options);
+		dist = torch::from_blob(neighbors_dists_ptr,
+					{query.size(0), max_count},
+					options=options_dist);
+
 	}
-	else if(mode == 1){
-		out = torch::from_blob(neighbors_indices_ptr, {(int)neighbors_indices.size()/2, 2}, options=options);
-		out_dists = torch::from_blob(neighbors_dists_ptr,
-					     {(int)neighbors_indices.size()/2, 1},
-					     options=options_dist);
+	else if(mode ==1){
+		idx = torch::from_blob(neighbors_indices_ptr, {(int)neighbors_indices.size()/2, 2}, options=options);
+		dist = torch::from_blob(neighbors_dists_ptr,
+					{(int)neighbors_indices.size()/2, 1},
+					options=options_dist);
 	}
-	return std::make_pair(out.clone(), out_dists.clone());
+	return std::make_pair(idx.clone(), dist.clone());
+
 }
 
 
