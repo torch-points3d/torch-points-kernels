@@ -86,7 +86,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 		for (auto& inds : list_matches){
 			token = inds[0].first;
 			for (int j = 0; j < max_count; j++){
-				if (j < inds.size()){
+				if ((unsigned int)j < inds.size()){
 					neighbors_indices[i0 * max_count + j] = inds[j].first;
 					dists[i0 * max_count + j] = (float) inds[j].second;
 
@@ -116,7 +116,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 		int u = 0; // curent index of the neighbors_indices
 		for (auto& inds : list_matches){
 			for (int j = 0; j < max_count; j++){
-				if(j < inds.size()){
+				if((unsigned int)j < inds.size()){
 					neighbors_indices[u] = inds[j].first;
 					neighbors_indices[u + 1] = i0;
 					dists[u/2] = (float) inds[j].second;
@@ -158,9 +158,8 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 
 
 	// batch index
-	long b = 0;
-	long sum_qb = 0;
-	long sum_sb = 0;
+	int b = 0;
+
 
 	// Nanoflann related variables
 	// ***************************
@@ -180,7 +179,7 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 // Pointer to trees
 	my_kd_tree_t* index;
     // Build KDTree for the first batch element
-	current_cloud.set_batch(supports, sum_sb, s_batches[b]);
+	current_cloud.set_batch(supports, s_batches[b], s_batches[b+1]);
 	index = new my_kd_tree_t(3, current_cloud, tree_params);
 	index->buildIndex();
 // Search neigbors indices
@@ -190,21 +189,22 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 	search_params.sorted = true;
 	for (auto& p0 : query_pcd.pts){
 // Check if we changed batch
-		if (i0 == sum_qb + q_batches[b] && b < s_batches.size()){
-			sum_qb += q_batches[b];
-			sum_sb += s_batches[b];
 
-			b++;
+		if (i0 == q_batches[b+1] && b < (int)s_batches.size()-1 && b < (int)q_batches.size()-1){
 
 // Change the points
+			b++;
 			current_cloud.pts.clear();
-			current_cloud.set_batch(supports, sum_sb, s_batches[b]);
+			if(s_batches[b] < s_batches[b+1])
+				current_cloud.set_batch(supports, s_batches[b], s_batches[b+1]);
 // Build KDTree of the current element of the batch
 			delete index;
 
 			index = new my_kd_tree_t(3, current_cloud, tree_params);
 			index->buildIndex();
+
 		}
+
 // Initial guess of neighbors size
 
 
@@ -233,22 +233,19 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 
 		dists.resize(query_pcd.pts.size() * max_count);
 		i0 = 0;
-		sum_sb = 0;
-		sum_qb = 0;
+
 		b = 0;
 
 		for (auto& inds_dists : all_inds_dists){// Check if we changed batch
 
 
-			if (i0 == sum_qb + q_batches[b]){
-				sum_qb += q_batches[b];
-				sum_sb += s_batches[b];
+			if (i0 == q_batches[b+1] && b < (int)s_batches.size()-1 && b < (int)q_batches.size()-1){
 				b++;
 			}
 
 			for (int j = 0; j < max_count; j++){
-				if (j < inds_dists.size()){
-					neighbors_indices[i0 * max_count + j] = inds_dists[j].first + sum_sb;
+				if ((unsigned int)j < inds_dists.size()){
+					neighbors_indices[i0 * max_count + j] = inds_dists[j].first + s_batches[b];
 					dists[i0 * max_count + j] = (float) inds_dists[j].second;
 				}
 				else {
@@ -273,19 +270,15 @@ int batch_nanoflann_neighbors (vector<scalar_t>& queries,
 		neighbors_indices.resize(size * 2);
 		dists.resize(size);
 		i0 = 0;
-		sum_sb = 0;
-		sum_qb = 0;
 		b = 0;
 		int u = 0;
 		for (auto& inds_dists : all_inds_dists){
-			if (i0 == sum_qb + q_batches[b]){
-				sum_qb += q_batches[b];
-				sum_sb += s_batches[b];
+			if (i0 == q_batches[b+1] && b < (int)s_batches.size()-1 && b < (int)q_batches.size()-1){
 				b++;
 			}
 			for (int j = 0; j < max_count; j++){
-				if (j < inds_dists.size()){
-					neighbors_indices[u] = inds_dists[j].first + sum_sb;
+				if ((unsigned int)j < inds_dists.size()){
+					neighbors_indices[u] = inds_dists[j].first + s_batches[b];
 					neighbors_indices[u + 1] = i0;
 					dists[u/2] = (float) inds_dists[j].second;
 					u += 2;
