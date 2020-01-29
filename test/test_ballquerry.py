@@ -30,10 +30,17 @@ class TestBall(unittest.TestCase):
 
     @run_if_cuda
     def test_cpu_gpu_equality(self):
-        a = torch.randn(2, 10, 3)
-        b = torch.randn(2, 5, 3)
-        res_cpu = ball_query(1, 17, a, b).detach().numpy()
-        res_cuda = ball_query(1, 17, a.cuda(), b.cuda()).cpu().detach().numpy()
+        a = torch.randn(5, 1000, 3)
+        b = torch.randn(5, 500, 3)
+        res_cpu = ball_query(1, 500, a, b).detach().numpy()
+        res_cuda = ball_query(1, 500, a.cuda(), b.cuda()).cpu().detach().numpy()
+        for i in range(b.shape[0]):
+            for j in range(b.shape[1]):
+                # Because it is not necessary the same order
+                assert set(res_cpu[i][j]) == set(res_cuda[i][j])
+
+        res_cpu = ball_query(0.01, 500, a, b).detach().numpy()
+        res_cuda = ball_query(0.01, 500, a.cuda(), b.cuda()).cpu().detach().numpy()
         for i in range(b.shape[0]):
             for j in range(b.shape[1]):
                 # Because it is not necessary the same order

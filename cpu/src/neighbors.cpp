@@ -119,8 +119,6 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 			}
 			i0++;
 		}
-
-
 	}
 	return max_count;
 }
