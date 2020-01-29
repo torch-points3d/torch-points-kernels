@@ -1,5 +1,6 @@
 #include "ball_query.h"
 #include "utils.h"
+#include "compat.h"
 
 void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius,
 					   int nsample, const float *new_xyz,
@@ -33,8 +34,8 @@ at::Tensor ball_query_dense(at::Tensor new_xyz, at::Tensor xyz, const float radi
 
   if (new_xyz.type().is_cuda()) {
     query_ball_point_kernel_dense_wrapper(xyz.size(0), xyz.size(1), new_xyz.size(1),
-					  radius, nsample, new_xyz.data_ptr<float>(),
-					  xyz.data_ptr<float>(), idx.data_ptr<int>());
+					  radius, nsample, new_xyz.DATA_PTR<float>(),
+					  xyz.DATA_PTR<float>(), idx.DATA_PTR<int>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }
@@ -74,7 +75,7 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 
 	cudaSetDevice(x.get_device());
 	auto batch_sizes = (int64_t *)malloc(sizeof(int64_t));
-	cudaMemcpy(batch_sizes, batch_x[-1].data_ptr<int64_t>(), sizeof(int64_t),
+	cudaMemcpy(batch_sizes, batch_x[-1].DATA_PTR<int64_t>(), sizeof(int64_t),
 				cudaMemcpyDeviceToHost);
 	auto batch_size = batch_sizes[0] + 1;
 
@@ -88,12 +89,12 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x,
 							x.size(0),
 							y.size(0),
 							radius, nsample,
-							x.data_ptr<float>(),
-							y.data_ptr<float>(),
-							batch_x.data_ptr<long>(),
-							batch_y.data_ptr<long>(),
-							idx.data_ptr<long>(),
-							dist.data_ptr<float>());
+							x.DATA_PTR<float>(),
+							y.DATA_PTR<float>(),
+							batch_x.DATA_PTR<long>(),
+							batch_y.DATA_PTR<long>(),
+							idx.DATA_PTR<long>(),
+							dist.DATA_PTR<float>());
 	} else {
 	  TORCH_CHECK(false, "CPU not supported");
 	}

@@ -7,39 +7,35 @@
 #include <iostream>
 
 
-std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor query,
-					     at::Tensor support,
+std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor support,
+					     at::Tensor query,
 					     float radius, int max_num, int mode){
 
 	at::Tensor out;
 	at::Tensor out_dists;
-	std::vector<long> neighbors_indices;
+	std::vector<long> neighbors_indices(query.size(0),0);
+	std::vector<float> neighbors_dists(query.size(0), -1);
 
 	auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
 	auto options_dist = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
 	int max_count = 0;
 
-	std::vector<float> neighbors_dists;
-
 	AT_DISPATCH_ALL_TYPES(query.scalar_type(), "radius_search", [&] {
+		auto data_q = query.DATA_PTR<scalar_t>();
+		auto data_s = support.DATA_PTR<scalar_t>();
+		std::vector<scalar_t> queries_stl = std::vector<scalar_t>(data_q,
+									data_q + query.size(0)*query.size(1));
+		std::vector<scalar_t> supports_stl = std::vector<scalar_t>(data_s,
+									data_s + support.size(0)*support.size(1));
 
-
-	auto data_q = query.DATA_PTR<scalar_t>();
-	auto data_s = support.DATA_PTR<scalar_t>();
-	std::vector<scalar_t> queries_stl = std::vector<scalar_t>(data_q,
-								   data_q + query.size(0)*query.size(1));
-	std::vector<scalar_t> supports_stl = std::vector<scalar_t>(data_s,
-								   data_s + support.size(0)*support.size(1));
-
-	max_count = nanoflann_neighbors<scalar_t>(queries_stl,
-						  supports_stl,
-						  neighbors_indices,
-						  neighbors_dists,
-						  radius,
-						  max_num,
-						  mode);
+		max_count = nanoflann_neighbors<scalar_t>(queries_stl,
+							supports_stl,
+							neighbors_indices,
+							neighbors_dists,
+							radius,
+							max_num,
+							mode);
 	});
-
 	auto neighbors_dists_ptr = neighbors_dists.data();
 	long* neighbors_indices_ptr = neighbors_indices.data();
 	if(mode == 0){
@@ -65,10 +61,10 @@ at::Tensor degree(at::Tensor row, int64_t num_nodes) {
 	return zero.scatter_add_(0, row, one);
 }
 
-std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
-						   at::Tensor support,
-						   at::Tensor query_batch,
+std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support,
+						   at::Tensor query,
 						   at::Tensor support_batch,
+						   at::Tensor query_batch,
 						   float radius, int max_num, int mode) {
 	at::Tensor idx;
 
@@ -92,8 +88,7 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 	AT_DISPATCH_ALL_TYPES(query.scalar_type(), "batch_radius_search", [&] {
 
         std::vector<scalar_t> queries_stl(query.DATA_PTR<scalar_t>(), query.DATA_PTR<scalar_t>() + query.numel());
-	std::vector<scalar_t> supports_stl(support.DATA_PTR<scalar_t>(), support.DATA_PTR<scalar_t>() + support.numel());
-
+		std::vector<scalar_t> supports_stl(support.DATA_PTR<scalar_t>(), support.DATA_PTR<scalar_t>() + support.numel());
 
         max_count = batch_nanoflann_neighbors<scalar_t>(queries_stl,
 							supports_stl,
@@ -114,7 +109,6 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 		dist = torch::from_blob(neighbors_dists_ptr,
 					{query.size(0), max_count},
 					options=options_dist);
-
 	}
 	else if(mode ==1){
 		idx = torch::from_blob(neighbors_indices_ptr, {(int)neighbors_indices.size()/2, 2}, options=options);
@@ -123,12 +117,11 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor query,
 					options=options_dist);
 	}
 	return std::make_pair(idx.clone(), dist.clone());
-
 }
 
 
-std::pair<at::Tensor, at::Tensor> dense_ball_query(at::Tensor query,
-						   at::Tensor support,
+std::pair<at::Tensor, at::Tensor> dense_ball_query(at::Tensor support,
+						   at::Tensor query,
 						   float radius, int max_num, int mode){
 
 	int b = query.size(0);

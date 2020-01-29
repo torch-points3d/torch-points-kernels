@@ -1,5 +1,6 @@
 #include "sampling.h"
 #include "utils.h"
+#include "compat.h"
 
 void gather_points_kernel_wrapper(int b, int c, int n, int npoints,
                                   const float *points, const int *idx,
@@ -28,8 +29,8 @@ at::Tensor gather_points(at::Tensor points, at::Tensor idx) {
 
   if (points.type().is_cuda()) {
     gather_points_kernel_wrapper(points.size(0), points.size(1), points.size(2),
-                                 idx.size(1), points.data_ptr<float>(),
-                                 idx.data_ptr<int>(), output.data_ptr<float>());
+                                 idx.size(1), points.DATA_PTR<float>(),
+                                 idx.DATA_PTR<int>(), output.DATA_PTR<float>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }
@@ -54,8 +55,8 @@ at::Tensor gather_points_grad(at::Tensor grad_out, at::Tensor idx,
 
   if (grad_out.type().is_cuda()) {
     gather_points_grad_kernel_wrapper(grad_out.size(0), grad_out.size(1), n,
-                                      idx.size(1), grad_out.data_ptr<float>(),
-                                      idx.data_ptr<int>(), output.data_ptr<float>());
+                                      idx.size(1), grad_out.DATA_PTR<float>(),
+                                      idx.DATA_PTR<int>(), output.DATA_PTR<float>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }
@@ -76,8 +77,8 @@ at::Tensor furthest_point_sampling(at::Tensor points, const int nsamples) {
 
   if (points.type().is_cuda()) {
     furthest_point_sampling_kernel_wrapper(
-        points.size(0), points.size(1), nsamples, points.data_ptr<float>(),
-        tmp.data_ptr<float>(), output.data_ptr<int>());
+        points.size(0), points.size(1), nsamples, points.DATA_PTR<float>(),
+        tmp.DATA_PTR<float>(), output.DATA_PTR<int>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }
