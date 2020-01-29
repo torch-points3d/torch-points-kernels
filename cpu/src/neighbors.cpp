@@ -45,7 +45,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 						     3 > my_kd_tree_t;
 
 	// Pointer to trees
-	std:::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, pcd, tree_params));
+	std::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, pcd, tree_params));
 	index->buildIndex();
 	// Search neigbors indices
 	// ***********************
