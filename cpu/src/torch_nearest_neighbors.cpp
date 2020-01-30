@@ -82,15 +82,6 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
     std::vector<long> support_batch_stl(support_batch.DATA_PTR<long>(),
                                         support_batch.DATA_PTR<long>() + support_batch.numel());
 
-    std::cout << std::endl;
-    for (auto i : query_batch_stl)
-        std::cout << i << " ";
-    std::cout << std::endl;
-
-    for (auto i : support_batch_stl)
-        std::cout << i << " ";
-    std::cout << std::endl;
-
     AT_DISPATCH_ALL_TYPES(query.scalar_type(), "batch_radius_search", [&] {
         std::vector<scalar_t> queries_stl(query.DATA_PTR<scalar_t>(),
                                           query.DATA_PTR<scalar_t>() + query.numel());
@@ -104,9 +95,6 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
     auto neighbors_dists_ptr = neighbors_dists.data();
     long* neighbors_indices_ptr = neighbors_indices.data();
 
-    for (auto i : neighbors_indices)
-        std::cout << i << " ";
-    std::cout << std::endl;
     if (mode == 0)
     {
         idx =

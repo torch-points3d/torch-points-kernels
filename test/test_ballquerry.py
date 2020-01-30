@@ -88,23 +88,23 @@ class TestBallPartial(unittest.TestCase):
         npt.assert_array_almost_equal(dist2, dist2_answer)
 
     def test_random_cpu(self):
-        a = torch.randn(10, 3).to(torch.float)
-        b = torch.randn(10, 3).to(torch.float)
+        a = torch.randn(100, 3).to(torch.float)
+        b = torch.randn(50, 3).to(torch.float)
         batch_a = torch.tensor([0 for i in range(a.shape[0] // 2)] + [1 for i in range(a.shape[0] // 2, a.shape[0])])
         batch_b = torch.tensor([0 for i in range(b.shape[0] // 2)] + [1 for i in range(b.shape[0] // 2, b.shape[0])])
         R = 1
 
-        idx, dist = ball_query(R, 5, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
+        idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
         self.assertEqual(idx.shape[0], b.shape[0])
         self.assertEqual(dist.shape[0], b.shape[0])
-        self.assertLessEqual(idx.max().item(), len(batch_b))
+        self.assertLessEqual(idx.max().item(), len(batch_a))
 
         # Comparison to see if we have the same result
         tree = KDTree(a.detach().numpy())
         idx3_sk = tree.query_radius(b.detach().numpy(), r=R)
         i = np.random.randint(len(batch_b))
         for p in idx[i].detach().numpy():
-            if p < len(batch_b):
+            if p < len(batch_a):
                 assert p in idx3_sk[i]
 
 
