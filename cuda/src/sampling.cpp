@@ -1,6 +1,6 @@
 #include "sampling.h"
-#include "utils.h"
 #include "compat.h"
+#include "utils.h"
 
 void gather_points_kernel_wrapper(int b, int c, int n, int npoints,
                                   const float *points, const int *idx,
@@ -56,7 +56,8 @@ at::Tensor gather_points_grad(at::Tensor grad_out, at::Tensor idx,
   if (grad_out.type().is_cuda()) {
     gather_points_grad_kernel_wrapper(grad_out.size(0), grad_out.size(1), n,
                                       idx.size(1), grad_out.DATA_PTR<float>(),
-                                      idx.DATA_PTR<int>(), output.DATA_PTR<float>());
+                                      idx.DATA_PTR<int>(),
+                                      output.DATA_PTR<float>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }

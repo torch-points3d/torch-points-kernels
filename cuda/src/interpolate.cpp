@@ -1,6 +1,6 @@
 #include "interpolate.h"
-#include "utils.h"
 #include "compat.h"
+#include "utils.h"
 
 void three_nn_kernel_wrapper(int b, int n, int m, const float *unknown,
                              const float *known, float *dist2, int *idx);
@@ -90,8 +90,8 @@ at::Tensor three_interpolate_grad(at::Tensor grad_out, at::Tensor idx,
   if (grad_out.type().is_cuda()) {
     three_interpolate_grad_kernel_wrapper(
         grad_out.size(0), grad_out.size(1), grad_out.size(2), m,
-        grad_out.DATA_PTR<float>(), idx.DATA_PTR<int>(), weight.DATA_PTR<float>(),
-        output.DATA_PTR<float>());
+        grad_out.DATA_PTR<float>(), idx.DATA_PTR<int>(),
+        weight.DATA_PTR<float>(), output.DATA_PTR<float>());
   } else {
     TORCH_CHECK(false, "CPU not supported");
   }
