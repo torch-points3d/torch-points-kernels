@@ -17,7 +17,7 @@ repos:
     hooks:
       - id: clang-format
         name: Run clang-format
-        entry: clang-format --style google -i
+        entry: clang-format -i
         types: [text]
         files: '.*\.cpp$|.*\.h$|.*\.cu$|.*\.hpp$'
         language: system
