@@ -296,7 +296,6 @@ def ball_query(
         batch_x -- (M, ) [partial_dense] or (B, M, 3) [dense] Contains indexes to indicate within batch it belongs to.
         batch_y -- (N, ) Contains indexes to indicate within batch it belongs to
 
-
     Returns:
         idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
         OPTIONAL[partial_dense] dist2: (N, nsample) Default value: -1.

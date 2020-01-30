@@ -23,7 +23,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 	int i0 = 0;
 
 	// Counting vector
-	int max_count = 1;
+	size_t max_count = 1;
 
 
 	// Nanoflann related variables
@@ -63,36 +63,30 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 		list_matches[i0].reserve(max_count);
 		std::vector<std::pair<size_t, scalar_t> >   ret_matches;
 
-
 		const size_t nMatches = index->radiusSearch(&query_pt[0], search_radius, ret_matches, search_params);
-		list_matches[i0] = ret_matches;
-		if((size_t)max_count < nMatches) max_count = nMatches;
+		if (nMatches == 0)
+			list_matches[i0] = {std::make_pair(0,-1)};
+		else
+			list_matches[i0] = ret_matches;
+		max_count = max(max_count,nMatches);
 		i0++;
-
-
 	}
 	// Reserve the memory
 	if(max_num > 0) {
 		max_count = max_num;
 	}
 	if(mode == 0){
-
-		neighbors_indices.resize(list_matches.size() * max_count);
-		dists.resize(list_matches.size() * max_count);
-
+		neighbors_indices.resize(list_matches.size() * max_count, 0);
+		dists.resize(list_matches.size() * max_count, -1);
 		i0 = 0;
-
 		int token = 0;
 		for (auto& inds : list_matches){
 			token = inds[0].first;
-			for (int j = 0; j < max_count; j++){
-				if ((unsigned int)j < inds.size()){
+			for (size_t j = 0; j < max_count; j++){
+				if (j < inds.size()){
 					neighbors_indices[i0 * max_count + j] = inds[j].first;
 					dists[i0 * max_count + j] = (float) inds[j].second;
-
-
 				}
-
 				else {
 					neighbors_indices[i0 * max_count + j] = token;
 					dists[i0 * max_count + j] = -1;
@@ -103,9 +97,9 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 
 	}
 	else if(mode == 1){
-		int size = 0; // total number of edges
+		size_t size = 0; // total number of edges
 		for (auto& inds : list_matches){
-			if((int)inds.size() <= max_count)
+			if(inds.size() <= max_count)
 				size += inds.size();
 			else
 				size += max_count;
@@ -115,8 +109,8 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 		int i0 = 0; // index of the query points
 		int u = 0; // curent index of the neighbors_indices
 		for (auto& inds : list_matches){
-			for (int j = 0; j < max_count; j++){
-				if((unsigned int)j < inds.size()){
+			for (size_t j = 0; j < max_count; j++){
+				if(j < inds.size()){
 					neighbors_indices[u] = inds[j].first;
 					neighbors_indices[u + 1] = i0;
 					dists[u/2] = (float) inds[j].second;
@@ -125,15 +119,10 @@ int nanoflann_neighbors(vector<scalar_t>& queries,
 			}
 			i0++;
 		}
-
-
 	}
 	return max_count;
-
-
-
-
 }
+
 template<typename scalar_t>
 int batch_nanoflann_neighbors (vector<scalar_t>& queries,
                                vector<scalar_t>& supports,

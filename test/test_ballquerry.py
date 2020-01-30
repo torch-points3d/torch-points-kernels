@@ -14,7 +14,13 @@ class TestBall(unittest.TestCase):
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float).cuda()
         b = torch.tensor([[[0, 0, 0]]]).to(torch.float).cuda()
 
-        npt.assert_array_equal(ball_query(1, 2, a, b).detach().cpu().numpy(), np.array([[[0, 0]]]))
+        npt.assert_array_equal(ball_query(0.5, 2, a, b).detach().cpu().numpy(), np.array([[[0, 0]]]))
+
+    def test_simple_cpu(self):
+        a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]], [[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float)
+        b = torch.tensor([[[0, 0, 0]], [[-1, 0, 0]]]).to(torch.float)
+
+        npt.assert_array_equal(ball_query(0.5, 2, a, b).detach().cpu().numpy(), np.array([[[0, 0]], [[0, 0]]]))
 
     @run_if_cuda
     def test_larger_gpu(self):
@@ -25,10 +31,18 @@ class TestBall(unittest.TestCase):
     @run_if_cuda
     def test_cpu_gpu_equality(self):
         a = torch.randn(5, 1000, 3)
-        res_cpu = ball_query(0.1, 17, a, a).detach().numpy()
-        res_cuda = ball_query(0.1, 17, a.cuda(), a.cuda()).cpu().detach().numpy()
-        for i in range(a.shape[0]):
-            for j in range(a.shape[1]):
+        b = torch.randn(5, 500, 3)
+        res_cpu = ball_query(1, 500, a, b).detach().numpy()
+        res_cuda = ball_query(1, 500, a.cuda(), b.cuda()).cpu().detach().numpy()
+        for i in range(b.shape[0]):
+            for j in range(b.shape[1]):
+                # Because it is not necessary the same order
+                assert set(res_cpu[i][j]) == set(res_cuda[i][j])
+
+        res_cpu = ball_query(0.01, 500, a, b).detach().numpy()
+        res_cuda = ball_query(0.01, 500, a.cuda(), b.cuda()).cpu().detach().numpy()
+        for i in range(b.shape[0]):
+            for j in range(b.shape[1]):
                 # Because it is not necessary the same order
                 assert set(res_cpu[i][j]) == set(res_cuda[i][j])
 
@@ -67,32 +81,29 @@ class TestBallPartial(unittest.TestCase):
         idx = idx.detach().cpu().numpy()
         dist2 = dist2.detach().cpu().numpy()
 
-        idx_answer = np.asarray([[1, 1], [0, 1], [1, 1], [1, 1]])
-        dist2_answer = np.asarray([[-1, -1], [0.01, -1], [-1, -1], [-1, -1]]).astype(np.float32)
+        idx_answer = np.asarray([[1, 4]])
+        dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
 
     def test_random_cpu(self):
-        a = torch.randn(1000, 3).to(torch.float)
-        b = torch.randn(1500, 3).to(torch.float)
-        batch_a = torch.randint(1, (1000,)).sort(0)[0].long()
-        batch_b = torch.randint(1, (1500,)).sort(0)[0].long()
-        idx, dist = ball_query(1.0, 12, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
-        idx2, dist2 = ball_query(1.0, 12, b, a, mode="PARTIAL_DENSE", batch_x=batch_b, batch_y=batch_a)
+        a = torch.randn(100, 3).to(torch.float)
+        b = torch.randn(50, 3).to(torch.float)
+        batch_a = torch.zeros((a.shape[0],)).long()
+        batch_b = torch.zeros((b.shape[0],)).long()
 
-        zeros = torch.zeros_like(batch_b)
-        idx3, dist3 = ball_query(0.5, 17, b, b, mode="PARTIAL_DENSE", batch_x=zeros, batch_y=zeros)
-
+        idx, dist = ball_query(0.5, 17, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
+        self.assertEqual(idx.shape[0], b.shape[0])
+        self.assertEqual(dist.shape[0], b.shape[0])
 
         # Comparison to see if we have the same result
-        tree = KDTree(b.detach().numpy())
+        tree = KDTree(a.detach().numpy())
         idx3_sk = tree.query_radius(b.detach().numpy(), r=0.5)
         i = np.random.randint(len(batch_b))
-        for p in idx3[i].detach().numpy():
+        for p in idx[i].detach().numpy():
             if p < len(batch_b):
                 assert p in idx3_sk[i]
-
 
 
 if __name__ == "__main__":
