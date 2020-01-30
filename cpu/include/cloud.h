@@ -40,7 +40,7 @@ struct PointCloud
 
 	std::vector<PointXYZ> pts;
 
-	void set(std::vector<scalar_t>& new_pts){
+	void set(const std::vector<scalar_t>& new_pts){
 
 		// pts = std::vector<PointXYZ>((PointXYZ*)new_pts, (PointXYZ*)new_pts+new_pts.size()/3);
 		pts.clear();
@@ -58,7 +58,7 @@ struct PointCloud
 		}
 		//pts = temp;
 	}
-	void set_batch(std::vector<scalar_t>& new_pts, int begin, int size){
+	void set_batch(const std::vector<scalar_t>& new_pts, int begin, int size){
 
 		pts.clear();
 		pts.resize(size);
