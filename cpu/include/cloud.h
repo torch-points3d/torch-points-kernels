@@ -37,31 +37,29 @@ struct PointCloud {
 
   std::vector<PointXYZ> pts;
 
-  void set(std::vector<scalar_t> new_pts) {
-    // pts = std::vector<PointXYZ>((PointXYZ*)new_pts,
-    // (PointXYZ*)new_pts+new_pts.size()/3);
-    std::vector<PointXYZ> temp(new_pts.size() / 3);
+  void set(const std::vector<scalar_t>& new_pts) {
+    pts.clear();
+		pts.resize(new_pts.size()/3);
     for (unsigned int i = 0; i < new_pts.size(); i++) {
       if (i % 3 == 0) {
         PointXYZ point;
         point.x = new_pts[i];
         point.y = new_pts[i + 1];
         point.z = new_pts[i + 2];
-        temp[i / 3] = point;
+        pts[i / 3] = point;
       }
     }
-    pts = temp;
   }
-  void set_batch(std::vector<scalar_t> new_pts, int begin, int size) {
-    std::vector<PointXYZ> temp(size);
+  void set_batch(const std::vector<scalar_t>& new_pts, int begin, int size) {
+    pts.clear();
+    pts.resize(size);
     for (int i = 0; i < size; i++) {
       PointXYZ point;
       point.x = new_pts[3 * (begin + i)];
       point.y = new_pts[3 * (begin + i) + 1];
       point.z = new_pts[3 * (begin + i) + 2];
-      temp[i] = point;
+      pts[i] = point;
     }
-    pts = temp;
   }
 
   // Must return the number of data points

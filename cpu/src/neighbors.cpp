@@ -40,8 +40,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
       my_kd_tree_t;
 
   // Pointer to trees
-  my_kd_tree_t* index;
-  index = new my_kd_tree_t(3, pcd, tree_params);
+  std::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, pcd, tree_params));
   index->buildIndex();
   // Search neigbors indices
   // ***********************
@@ -156,11 +155,9 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries,
       PointCloud<scalar_t>, 3>
       my_kd_tree_t;
 
-  // Pointer to trees
-  my_kd_tree_t* index;
   // Build KDTree for the first batch element
-  current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
-  index = new my_kd_tree_t(3, current_cloud, tree_params);
+	current_cloud.set_batch(supports, s_batches[b], s_batches[b+1]);
+	std::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, current_cloud, tree_params));
   index->buildIndex();
   // Search neigbors indices
   // ***********************
@@ -177,10 +174,9 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries,
       current_cloud.pts.clear();
       if (s_batches[b] < s_batches[b + 1])
         current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
-      // Build KDTree of the current element of the batch
-      delete index;
 
-      index = new my_kd_tree_t(3, current_cloud, tree_params);
+      // Build KDTree of the current element of the batch
+      index.reset(new my_kd_tree_t(3, current_cloud, tree_params));
       index->buildIndex();
     }
 
@@ -233,7 +229,7 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries,
 
       i0++;
     }
-    delete index;
+    index.reset();
   } else if (mode == 1) {
     int size = 0;  // total number of edges
     for (auto& inds_dists : all_inds_dists) {
