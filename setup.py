@@ -44,7 +44,7 @@ requirements = ["torch>=1.1.0"]
 
 setup(
     name="torch_points",
-    version="0.2.3",
+    version="0.3.0",
     author="Nicolas Chaulet",
     packages=find_packages(),
     install_requires=requirements,

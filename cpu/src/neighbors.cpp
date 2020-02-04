@@ -209,43 +209,35 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     }
     // how many neighbors do we keep
     if (max_num > 0)
-    {
         max_count = max_num;
-    }
-    // Reserve the memory
 
+    const int token = -1;
     if (mode == 0)
     {
         neighbors_indices.resize(query_pcd.pts.size() * max_count);
-
         dists.resize(query_pcd.pts.size() * max_count);
         i0 = 0;
-
         b = 0;
 
         for (auto& inds_dists : all_inds_dists)
         { // Check if we changed batch
-
             if (i0 == q_batches[b + 1] && b < (int)s_batches.size() - 1 &&
                 b < (int)q_batches.size() - 1)
-            {
                 b++;
-            }
 
             for (int j = 0; j < max_count; j++)
             {
-                if ((unsigned int)j < inds_dists.size())
+                if ((size_t)j < inds_dists.size())
                 {
                     neighbors_indices[i0 * max_count + j] = inds_dists[j].first + s_batches[b];
                     dists[i0 * max_count + j] = (float)inds_dists[j].second;
                 }
                 else
                 {
-                    neighbors_indices[i0 * max_count + j] = supports.size() / 3;
+                    neighbors_indices[i0 * max_count + j] = token;
                     dists[i0 * max_count + j] = -1;
                 }
             }
-
             i0++;
         }
         index.reset();

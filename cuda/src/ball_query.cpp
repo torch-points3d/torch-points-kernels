@@ -64,8 +64,8 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x, at::Ten
         CHECK_CUDA(batch_y);
     }
 
-    at::Tensor idx = torch::full({y.size(0), nsample}, x.size(0),
-                                 at::device(y.device()).dtype(at::ScalarType::Long));
+    at::Tensor idx =
+        torch::full({y.size(0), nsample}, -1, at::device(y.device()).dtype(at::ScalarType::Long));
 
     at::Tensor dist =
         torch::full({y.size(0), nsample}, -1, at::device(y.device()).dtype(at::ScalarType::Float));

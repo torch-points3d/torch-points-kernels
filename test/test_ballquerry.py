@@ -63,7 +63,7 @@ class TestBallPartial(unittest.TestCase):
         idx = idx.detach().cpu().numpy()
         dist2 = dist2.detach().cpu().numpy()
 
-        idx_answer = np.asarray([[1, 4]])
+        idx_answer = np.asarray([[1, -1]])
         dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
@@ -81,7 +81,7 @@ class TestBallPartial(unittest.TestCase):
         idx = idx.detach().cpu().numpy()
         dist2 = dist2.detach().cpu().numpy()
 
-        idx_answer = np.asarray([[1, 4]])
+        idx_answer = np.asarray([[1, -1]])
         dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
@@ -95,6 +95,9 @@ class TestBallPartial(unittest.TestCase):
         R = 1
 
         idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
+        idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
+        torch.testing.assert_allclose(idx1, idx)
+
         self.assertEqual(idx.shape[0], b.shape[0])
         self.assertEqual(dist.shape[0], b.shape[0])
         self.assertLessEqual(idx.max().item(), len(batch_a))
@@ -104,7 +107,7 @@ class TestBallPartial(unittest.TestCase):
         idx3_sk = tree.query_radius(b.detach().numpy(), r=R)
         i = np.random.randint(len(batch_b))
         for p in idx[i].detach().numpy():
-            if p < len(batch_a):
+            if p >= 0 and p < len(batch_a):
                 assert p in idx3_sk[i]
 
 
