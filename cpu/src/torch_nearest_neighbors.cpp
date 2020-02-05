@@ -3,12 +3,16 @@
 #include "compat.h"
 #include "neighbors.cpp"
 #include "neighbors.h"
+#include "utils.h"
 #include <iostream>
 #include <torch/extension.h>
 
 std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor support, at::Tensor query, float radius,
                                              int max_num, int mode)
 {
+    CHECK_CONTIGUOUS(support);
+    CHECK_CONTIGUOUS(query);
+
     at::Tensor out;
     at::Tensor out_dists;
     std::vector<long> neighbors_indices(query.size(0), 0);
@@ -60,6 +64,11 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
                                                    at::Tensor support_batch, at::Tensor query_batch,
                                                    float radius, int max_num, int mode)
 {
+    CHECK_CONTIGUOUS(support);
+    CHECK_CONTIGUOUS(query);
+    CHECK_CONTIGUOUS(support_batch);
+    CHECK_CONTIGUOUS(query_batch);
+
     at::Tensor idx;
 
     at::Tensor dist;
@@ -115,6 +124,9 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
 std::pair<at::Tensor, at::Tensor> dense_ball_query(at::Tensor support, at::Tensor query,
                                                    float radius, int max_num, int mode)
 {
+    CHECK_CONTIGUOUS(support);
+    CHECK_CONTIGUOUS(query);
+
     int b = query.size(0);
     vector<at::Tensor> batch_idx;
     vector<at::Tensor> batch_dist;
