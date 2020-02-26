@@ -43,50 +43,6 @@ def furthest_point_sample(xyz, npoint):
     """
     return FurthestPointSampling.apply(xyz, npoint)
 
-
-class GatherOperation(Function):
-    @staticmethod
-    def forward(ctx, features, idx):
-        # type: (Any, torch.Tensor, torch.Tensor) -> torch.Tensor
-        _, C, N = features.size()
-
-        ctx.for_backwards = (idx, C, N)
-
-        if features.is_cuda:
-            return tpcuda.gather_points(features, idx)
-        else:
-            return tpcpu.gather_points(features, idx)
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        idx, C, N = ctx.for_backwards
-
-        if grad_out.is_cuda:
-            grad_features = tpcuda.gather_points_grad(grad_out.contiguous(), idx, N)
-            return grad_features, None
-        else:
-            raise NotImplementedError
-
-
-def gather_operation(features, idx):
-    r"""
-
-       Parameters
-       ----------
-       features : torch.Tensor
-           (B, C, N) tensor
-
-       idx : torch.Tensor
-           (B, npoint) tensor of the features to gather
-
-       Returns
-       -------
-       torch.Tensor
-           (B, C, npoint) tensor
-       """
-    return GatherOperation.apply(features, idx)
-
-
 class ThreeNN(Function):
     @staticmethod
     def forward(ctx, unknown, known):
@@ -250,8 +206,7 @@ class BallQueryDense(Function):
         if new_xyz.is_cuda:
             return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
         else:
-            ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
-            return ind
+            return tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
 
     @staticmethod
     def backward(ctx, a=None):
@@ -298,7 +253,7 @@ def ball_query(
 
     Returns:
         idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
-        OPTIONAL[partial_dense] dist2: (N, nsample) Default value: -1.
+        dist2: (N, nsample) or (B, npoint, nsample)  Default value: -1.
                  It contains the square distances of the element within x at radius distance to y
     """
     if mode is None:
