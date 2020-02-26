@@ -9,7 +9,8 @@
 __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius, int nsample,
                                               const float* __restrict__ new_xyz,
                                               const float* __restrict__ xyz,
-                                              int* __restrict__ idx_out)
+                                              int* __restrict__ idx_out, 
+                                              float* __restrict__ dist_out)
 {
     int batch_index = blockIdx.x;
     xyz += batch_index * n * 3;
@@ -42,6 +43,7 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
                     }
                 }
                 idx_out[j * nsample + cnt] = k;
+                dist_out[j * nsample + cnt] = d2
                 ++cnt;
             }
         }
@@ -90,11 +92,11 @@ __global__ void query_ball_point_kernel_partial_dense(
 }
 
 void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius, int nsample,
-                                           const float* new_xyz, const float* xyz, int* idx)
+                                           const float* new_xyz, const float* xyz, int* idx,float* dist_out)
 {
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     query_ball_point_kernel_dense<<<b, opt_n_threads(m), 0, stream>>>(b, n, m, radius, nsample,
-                                                                      new_xyz, xyz, idx);
+                                                                      new_xyz, xyz, idx,dist_out);
 
     CUDA_CHECK_ERRORS();
 }
