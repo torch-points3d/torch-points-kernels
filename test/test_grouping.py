@@ -16,7 +16,7 @@ class TestGroup(unittest.TestCase):
                 [[100, 110, 120], [101, 111, 121], [102, 112, 122],],  # x-coordinates  # y-coordinates  # z-coordinates
             ]
         ).type(torch.float)
-        idx = torch.tensor([[[1, 0], [0, 0]], [[0, 1], [1, 2]]]).type(torch.int)
+        idx = torch.tensor([[[1, 0], [0, 0]], [[0, 1], [1, 2]]]).type(torch.long)
 
         expected = np.array(
             [

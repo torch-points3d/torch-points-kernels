@@ -141,47 +141,6 @@ def three_interpolate(features, idx, weight):
     """
     return ThreeInterpolate.apply(features, idx, weight)
 
-
-class GroupingOperation(Function):
-    @staticmethod
-    def forward(ctx, features, idx):
-        # type: (Any, torch.Tensor, torch.Tensor) -> torch.Tensor
-        B, nfeatures, nsample = idx.size()
-        _, C, N = features.size()
-
-        ctx.for_backwards = (idx, N)
-
-        if features.is_cuda:
-            return tpcuda.group_points(features, idx)
-        else:
-            return tpcpu.group_points(features, idx)
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        # type: (Any, torch.tensor) -> Tuple[torch.Tensor, torch.Tensor]
-        r"""
-
-        Parameters
-        ----------
-        grad_out : torch.Tensor
-            (B, C, npoint, nsample) tensor of the gradients of the output from forward
-
-        Returns
-        -------
-        torch.Tensor
-            (B, C, N) gradient of the features
-        None
-        """
-        idx, N = ctx.for_backwards
-
-        if grad_out.is_cuda:
-            grad_features = tpcuda.group_points_grad(grad_out.contiguous(), idx, N)
-        else:
-            raise NotImplementedError
-
-        return grad_features, None
-
-
 def grouping_operation(features, idx):
     r"""
     Parameters
@@ -196,7 +155,10 @@ def grouping_operation(features, idx):
     torch.Tensor
         (B, C, npoint, nsample) tensor
     """
-    return GroupingOperation.apply(features, idx)
+    all_idx = idx.reshape(idx.shape[0], -1)
+    all_idx = all_idx.unsqueeze(1).repeat(1,features.shape[1],1)
+    grouped_features = features.gather(2,all_idx)
+    return grouped_features.reshape(idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2])
 
 
 class BallQueryDense(Function):

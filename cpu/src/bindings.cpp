@@ -1,12 +1,9 @@
 #include "ball_query.h"
-#include "group_points.h"
 
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
-    m.def("group_points", &group_points);
-
     m.def("ball_query", &ball_query,
           "compute the radius search of a point cloud using nanoflann"
           "- support : a pytorch tensor of size N1 x 3, points where the "
