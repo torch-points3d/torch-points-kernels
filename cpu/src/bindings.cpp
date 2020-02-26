@@ -1,9 +1,12 @@
 #include "ball_query.h"
+#include "knn.h"
 
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
+    m.def("dense_knn", &dense_knn,"", "support"_a, "querry"_a, "k"_a);
+
     m.def("ball_query", &ball_query,
           "compute the radius search of a point cloud using nanoflann"
           "- support : a pytorch tensor of size N1 x 3, points where the "

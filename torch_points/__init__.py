@@ -1,4 +1,5 @@
 from .torchpoints import *
+from .knn import *
 
 __all__ = [
     "ball_query",
@@ -7,4 +8,5 @@ __all__ = [
     "grouping_operation",
     "three_interpolate",
     "three_nn",
+    "knn"
 ]
