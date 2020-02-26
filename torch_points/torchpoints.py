@@ -3,6 +3,7 @@ from torch.autograd import Function
 import torch.nn as nn
 import sys
 from typing import Optional, Any, Tuple
+from torch_geometric.nn import knn_interpolate
 
 import torch_points.points_cpu as tpcpu
 
@@ -140,6 +141,13 @@ def three_interpolate(features, idx, weight):
         (B, c, n) tensor of the interpolated features
     """
     return ThreeInterpolate.apply(features, idx, weight)
+
+def three_interpolate_tg(x, pos, new_pos):
+    interpolated = []
+    for i in range(x.shape[0]):
+        interpolated.append(knn_interpolate(x.transpose(1,0), pos, new_pos).transpose(1,0))
+    return torch.stack(interpolated)
+
 
 def grouping_operation(features, idx):
     r"""

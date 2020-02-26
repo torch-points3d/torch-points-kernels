@@ -11,4 +11,6 @@ def knn(pos_support, pos, k):
         idx - [B,M,k]
         dist2 - [B,M,k] squared distances
     """
+    assert pos_support.dim() == 3 and pos.dim() == 3
+    
     return tpcpu.dense_knn(pos_support, pos, k)
