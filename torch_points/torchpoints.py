@@ -17,7 +17,7 @@ class FurthestPointSampling(Function):
         if xyz.is_cuda:
             return tpcuda.furthest_point_sampling(xyz, npoint)
         else:
-            raise NotImplementedError
+            return tpcpu.fps(xyz, npoint, True)
 
     @staticmethod
     def backward(xyz, a=None):
