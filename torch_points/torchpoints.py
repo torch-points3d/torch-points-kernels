@@ -11,19 +11,6 @@ if torch.cuda.is_available():
     import torch_points.points_cuda as tpcuda
 
 
-class FurthestPointSampling(Function):
-    @staticmethod
-    def forward(ctx, xyz, npoint):
-        if xyz.is_cuda:
-            return tpcuda.furthest_point_sampling(xyz, npoint)
-        else:
-            return tpcpu.fps(xyz, npoint, True)
-
-    @staticmethod
-    def backward(xyz, a=None):
-        return None, None
-
-
 def furthest_point_sample(xyz, npoint):
     # type: (Any, torch.Tensor, int) -> torch.Tensor
     r"""
@@ -42,24 +29,10 @@ def furthest_point_sample(xyz, npoint):
     torch.Tensor
         (B, npoint) tensor containing the set
     """
-    return FurthestPointSampling.apply(xyz, npoint)
-
-
-class ThreeNN(Function):
-    @staticmethod
-    def forward(ctx, unknown, known):
-        # type: (Any, torch.Tensor, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]
-
-        if unknown.is_cuda:
-            dist2, idx = tpcuda.three_nn(unknown, known)
-        else:
-            idx, dist2 = knn(known, unknown, 3)
-
-        return torch.sqrt(dist2), idx
-
-    @staticmethod
-    def backward(ctx, a=None, b=None):
-        return None, None
+    if xyz.is_cuda:
+        return tpcuda.furthest_point_sampling(xyz, npoint)
+    else:
+        return tpcpu.fps(xyz, npoint, True)
 
 
 def three_nn(unknown, known):
@@ -79,7 +52,12 @@ def three_nn(unknown, known):
     idx : torch.Tensor
         (B, n, 3) index of 3 nearest neighbors
     """
-    return ThreeNN.apply(unknown, known)
+    if unknown.is_cuda:
+        dist2, idx = tpcuda.three_nn(unknown, known)
+    else:
+        idx, dist2 = knn(known, unknown, 3)
+
+    return torch.sqrt(dist2), idx
 
 
 class ThreeInterpolate(Function):
