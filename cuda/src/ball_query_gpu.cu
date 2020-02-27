@@ -16,6 +16,7 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
     xyz += batch_index * n * 3;
     new_xyz += batch_index * m * 3;
     idx_out += m * nsample * batch_index;
+    dist_out += m * nsample * batch_index;
 
     int index = threadIdx.x;
     int stride = blockDim.x;
@@ -43,7 +44,7 @@ __global__ void query_ball_point_kernel_dense(int b, int n, int m, float radius,
                     }
                 }
                 idx_out[j * nsample + cnt] = k;
-                dist_out[j * nsample + cnt] = d2
+                dist_out[j * nsample + cnt] = d2;
                 ++cnt;
             }
         }

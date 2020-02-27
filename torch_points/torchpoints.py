@@ -3,9 +3,9 @@ from torch.autograd import Function
 import torch.nn as nn
 import sys
 from typing import Optional, Any, Tuple
-from torch_geometric.nn import knn_interpolate
 
 import torch_points.points_cpu as tpcpu
+from .knn import knn
 
 if torch.cuda.is_available():
     import torch_points.points_cuda as tpcuda
@@ -44,6 +44,7 @@ def furthest_point_sample(xyz, npoint):
     """
     return FurthestPointSampling.apply(xyz, npoint)
 
+
 class ThreeNN(Function):
     @staticmethod
     def forward(ctx, unknown, known):
@@ -52,7 +53,7 @@ class ThreeNN(Function):
         if unknown.is_cuda:
             dist2, idx = tpcuda.three_nn(unknown, known)
         else:
-            raise NotImplementedError
+            idx, dist2 = knn(known, unknown, 3)
 
         return torch.sqrt(dist2), idx
 
@@ -93,7 +94,7 @@ class ThreeInterpolate(Function):
         if features.is_cuda:
             return tpcuda.three_interpolate(features, idx, weight)
         else:
-            raise NotImplementedError
+            return tpcpu.knn_interpolate(features, idx, weight)
 
     @staticmethod
     def backward(ctx, grad_out):
@@ -118,7 +119,7 @@ class ThreeInterpolate(Function):
         if grad_out.is_cuda:
             grad_features = tpcuda.three_interpolate_grad(grad_out.contiguous(), idx, weight, m)
         else:
-            raise NotImplementedError
+            grad_features = tpcpu.knn_interpolate_grad(grad_out.contiguous(), idx, weight, m)
 
         return grad_features, None, None
 
@@ -142,12 +143,6 @@ def three_interpolate(features, idx, weight):
     """
     return ThreeInterpolate.apply(features, idx, weight)
 
-def three_interpolate_tg(x, pos, new_pos):
-    interpolated = []
-    for i in range(x.shape[0]):
-        interpolated.append(knn_interpolate(x.transpose(1,0), pos, new_pos).transpose(1,0))
-    return torch.stack(interpolated)
-
 
 def grouping_operation(features, idx):
     r"""
@@ -164,8 +159,8 @@ def grouping_operation(features, idx):
         (B, C, npoint, nsample) tensor
     """
     all_idx = idx.reshape(idx.shape[0], -1)
-    all_idx = all_idx.unsqueeze(1).repeat(1,features.shape[1],1)
-    grouped_features = features.gather(2,all_idx)
+    all_idx = all_idx.unsqueeze(1).repeat(1, features.shape[1], 1)
+    grouped_features = features.gather(2, all_idx)
     return grouped_features.reshape(idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2])
 
 

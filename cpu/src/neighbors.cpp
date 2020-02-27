@@ -128,7 +128,6 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
     return max_count;
 }
 
-
 template <typename scalar_t>
 int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
                               vector<long>& q_batches, vector<long>& s_batches,
@@ -283,11 +282,10 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
 
 template <typename scalar_t>
 void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                        vector<long>& neighbors_indices, vector<float>& dists, int k)
+                             vector<long>& neighbors_indices, vector<float>& dists, int k)
 {
     // Nanoflann related variables
     // ***************************
-
     // CLoud variable
     PointCloud<scalar_t> pcd;
     pcd.set(supports);
@@ -315,12 +313,10 @@ void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppor
         // Find neighbors
         scalar_t query_pt[3] = {p0.x, p0.y, p0.z};
         std::vector<size_t> ret_index(k);
-		std::vector<scalar_t> out_dist_sqr(k);
+        std::vector<scalar_t> out_dist_sqr(k);
 
-        const size_t nMatches =
-            index->knnSearch(&query_pt[0], k, &ret_index[0], &out_dist_sqr[0]);
-        
-        for (size_t i=0; i < nMatches; i++)
+        const size_t nMatches = index->knnSearch(&query_pt[0], k, &ret_index[0], &out_dist_sqr[0]);
+        for (size_t i = 0; i < nMatches; i++)
         {
             neighbors_indices[i + current_pos] = ret_index[i];
             dists[i + current_pos] = out_dist_sqr[i];
