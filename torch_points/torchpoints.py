@@ -29,6 +29,8 @@ def furthest_point_sample(xyz, npoint):
     torch.Tensor
         (B, npoint) tensor containing the set
     """
+    if npoint > xyz.shape[1]:
+        raise ValueError("caanot sample %i points from an input set of %i points" % (npoint, xyz.shape[1]))
     if xyz.is_cuda:
         return tpcuda.furthest_point_sampling(xyz, npoint)
     else:
@@ -52,6 +54,8 @@ def three_nn(unknown, known):
     idx : torch.Tensor
         (B, n, 3) index of 3 nearest neighbors
     """
+    if unknown.shape[1] < 3:
+        raise ValueError("Not enough points. unknown should ahve at least 3 points.")
     if unknown.is_cuda:
         dist2, idx = tpcuda.three_nn(unknown, known)
     else:
