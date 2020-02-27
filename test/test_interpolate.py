@@ -36,7 +36,7 @@ class TestInterpolate(unittest.TestCase):
         dist_recip = 1.0 / (dist + 1e-8)
         norm = torch.sum(dist_recip, dim=2, keepdim=True)
         weight = dist_recip / norm
-        input = (x, idx, weight)
+        input = (x, idx, weight.double())
         test = gradcheck(three_interpolate, input, eps=1e-6, atol=1e-4)
 
 

@@ -12,8 +12,8 @@ from . import run_if_cuda
 
 class TestKnn(unittest.TestCase):
     def test_cpu(self):
-        support = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]]])
-        query = torch.tensor([[[0, 0, 0]]])
+        support = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).float()
+        query = torch.tensor([[[0, 0, 0]]]).float()
 
         idx, dist = knn(support, query, 3)
         torch.testing.assert_allclose(idx, torch.tensor([[[0, 1, 2]]]))

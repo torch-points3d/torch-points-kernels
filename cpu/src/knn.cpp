@@ -16,7 +16,7 @@ std::pair<at::Tensor, at::Tensor> _single_batch_knn(at::Tensor support, at::Tens
     std::vector<float> neighbors_dists(query.size(0) * k, -1);
 
     auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
-    auto options_dist = torch::TensorOptions().dtype(query.scalar_type()).device(torch::kCPU);
+    auto options_dist = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
     AT_DISPATCH_ALL_TYPES(query.scalar_type(), "knn", [&] {
         auto data_q = query.DATA_PTR<scalar_t>();
         auto data_s = support.DATA_PTR<scalar_t>();
