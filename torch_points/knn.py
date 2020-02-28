@@ -1,5 +1,6 @@
 import torch_points.points_cpu as tpcpu
 
+
 def knn(pos_support, pos, k):
     """ Dense knn serach
     Arguments:
@@ -12,5 +13,6 @@ def knn(pos_support, pos, k):
         dist2 - [B,M,k] squared distances
     """
     assert pos_support.dim() == 3 and pos.dim() == 3
-    
+    if pos_support.is_cuda:
+        raise ValueError("CUDA version not implemented, use pytorch geometric")
     return tpcpu.dense_knn(pos_support, pos, k)

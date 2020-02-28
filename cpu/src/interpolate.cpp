@@ -30,7 +30,10 @@ at::Tensor knn_interpolate(at::Tensor features, at::Tensor idx, at::Tensor weigh
                 {
                     output_a[b][c][p] = 0;
                     for (int i = 0; i < idx.size(2); i++)
-                        output_a[b][c][p] += features_a[b][c][idx_a[b][p][i]] * weight_a[b][p][i];
+                    {
+                        auto new_idx = idx_a[b][p][i];
+                        output_a[b][c][p] += features_a[b][c][new_idx] * weight_a[b][p][i];
+                    }
                 }
             }
         }

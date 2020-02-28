@@ -321,6 +321,6 @@ void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppor
             neighbors_indices[i + current_pos] = ret_index[i];
             dists[i + current_pos] = out_dist_sqr[i];
         }
-        current_pos += nMatches;
+        current_pos += k;
     }
 }
