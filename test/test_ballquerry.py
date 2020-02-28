@@ -14,24 +14,24 @@ class TestBall(unittest.TestCase):
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]], [[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float).cuda()
         b = torch.tensor([[[0, 0, 0]], [[3, 0, 0]]]).to(torch.float).cuda()
         idx, dist = ball_query(1.01, 2, a, b)
-        torch.testing.assert_allclose(idx.long().cpu(), torch.tensor([[[0, 1]], [[2, 2]]]))
+        torch.testing.assert_allclose(idx.cpu(), torch.tensor([[[0, 1]], [[2, 2]]]))
         torch.testing.assert_allclose(dist.cpu(), torch.tensor([[[0, 1]], [[1, -1]]]).float())
 
     def test_simple_cpu(self):
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]], [[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float)
         b = torch.tensor([[[0, 0, 0]], [[3, 0, 0]]]).to(torch.float)
-        idx, dist = ball_query(1.01, 2, a, b)
-        torch.testing.assert_allclose(idx.long(), torch.tensor([[[0, 1]], [[2, 2]]]))
+        idx, dist = ball_query(1.01, 2, a, b, sort=True)
+        torch.testing.assert_allclose(idx, torch.tensor([[[0, 1]], [[2, 2]]]))
         torch.testing.assert_allclose(dist, torch.tensor([[[0, 1]], [[1, -1]]]).float())
 
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [1, 1, 0]]]).to(torch.float)
-        idx, dist = ball_query(1.01, 3, a, a)
-        torch.testing.assert_allclose(idx.long(),torch.tensor([[[0, 1, 0],[1,0,2],[2,1,2]]]))
+        idx, dist = ball_query(1.01, 3, a, a, sort=True)
+        torch.testing.assert_allclose(idx, torch.tensor([[[0, 1, 0], [1, 0, 2], [2, 1, 2]]]))
 
     @run_if_cuda
     def test_larger_gpu(self):
         a = torch.randn(32, 4096, 3).to(torch.float).cuda()
-        idx,dist = ball_query(1, 64, a, a)
+        idx, dist = ball_query(1, 64, a, a)
         self.assertGreaterEqual(idx.min(), 0)
 
     @run_if_cuda
@@ -70,7 +70,7 @@ class TestBallPartial(unittest.TestCase):
         dist2 = dist2.detach().cpu().numpy()
 
         idx_answer = np.asarray([[1, -1]])
-        dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
+        dist2_answer = np.asarray([[0.100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
@@ -88,7 +88,7 @@ class TestBallPartial(unittest.TestCase):
         dist2 = dist2.detach().cpu().numpy()
 
         idx_answer = np.asarray([[1, -1]])
-        dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
+        dist2_answer = np.asarray([[0.100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
@@ -100,9 +100,13 @@ class TestBallPartial(unittest.TestCase):
         batch_b = torch.tensor([0 for i in range(b.shape[0] // 2)] + [1 for i in range(b.shape[0] // 2, b.shape[0])])
         R = 1
 
-        idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
-        idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b)
+        idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True)
+        idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True)
         torch.testing.assert_allclose(idx1, idx)
+        with self.assertRaises(AssertionError):
+            idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=False)
+            idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=False)
+            torch.testing.assert_allclose(idx1, idx)
 
         self.assertEqual(idx.shape[0], b.shape[0])
         self.assertEqual(dist.shape[0], b.shape[0])

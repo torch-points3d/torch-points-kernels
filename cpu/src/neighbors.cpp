@@ -2,17 +2,19 @@
 // Taken from https://github.com/HuguesTHOMAS/KPConv
 
 #include "neighbors.h"
+#include <random>
 
 template <typename scalar_t>
 int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
                         vector<long>& neighbors_indices, vector<float>& dists, float radius,
-                        int max_num, int mode)
+                        int max_num, int mode, bool sorted)
 {
     // Initiate variables
     // ******************
+    std::random_device rd;
+    std::mt19937 g(rd());
 
     // square radius
-
     const float search_radius = static_cast<float>(radius * radius);
 
     // indices
@@ -47,7 +49,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
 
     // Search params
     nanoflann::SearchParams search_params;
-    search_params.sorted = true;
+    search_params.sorted = sorted;
     std::vector<std::vector<std::pair<size_t, scalar_t>>> list_matches(pcd_query.pts.size());
 
     for (auto& p0 : pcd_query.pts)
@@ -62,7 +64,11 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
         if (nMatches == 0)
             list_matches[i0] = {std::make_pair(0, -1)};
         else
+        {
+            if (!sorted)
+                std::shuffle(ret_matches.begin(), ret_matches.end(), g);
             list_matches[i0] = ret_matches;
+        }
         max_count = max(max_count, nMatches);
         i0++;
     }
@@ -132,10 +138,13 @@ template <typename scalar_t>
 int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
                               vector<long>& q_batches, vector<long>& s_batches,
                               vector<long>& neighbors_indices, vector<float>& dists, float radius,
-                              int max_num, int mode)
+                              int max_num, int mode, bool sorted)
 {
     // Initiate variables
     // ******************
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     // indices
     int i0 = 0;
 
@@ -173,7 +182,7 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     // ***********************
     // Search params
     nanoflann::SearchParams search_params;
-    search_params.sorted = true;
+    search_params.sorted = sorted;
     for (auto& p0 : query_pcd.pts)
     {
         // Check if we changed batch
@@ -192,16 +201,18 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
             index->buildIndex();
         }
 
-        // Initial guess of neighbors size
-
-        all_inds_dists[i0].reserve(max_count);
-        // Find neighbors
-        // std::cerr << p0.x << p0.y << p0.z<<std::endl;
+        // Find neighboors
+        std::vector<std::pair<size_t, scalar_t>> ret_matches;
+        ret_matches.reserve(max_count);
         scalar_t query_pt[3] = {p0.x, p0.y, p0.z};
+        size_t nMatches = index->radiusSearch(query_pt, r2, ret_matches, search_params);
 
-        size_t nMatches = index->radiusSearch(query_pt, r2, all_inds_dists[i0], search_params);
+        // Shuffle if needed
+        if (!sorted)
+            std::shuffle(ret_matches.begin(), ret_matches.end(), g);
+        all_inds_dists[i0] = ret_matches;
+
         // Update max count
-
         if (nMatches > (size_t)max_count)
             max_count = nMatches;
         // Increment query idx
