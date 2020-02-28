@@ -2,6 +2,7 @@
 // Taken from https://github.com/HuguesTHOMAS/KPConv
 
 #include "neighbors.h"
+#include <random>
 
 template <typename scalar_t>
 int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
@@ -62,7 +63,12 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
         if (nMatches == 0)
             list_matches[i0] = {std::make_pair(0, -1)};
         else
+        {
+            std::random_device rd;
+            std::mt19937 g(rd());
+            std::shuffle(ret_matches.begin(), ret_matches.end(), g);
             list_matches[i0] = ret_matches;
+        }
         max_count = max(max_count, nMatches);
         i0++;
     }
