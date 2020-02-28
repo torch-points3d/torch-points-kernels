@@ -146,33 +146,30 @@ def grouping_operation(features, idx):
     return grouped_features.reshape(idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2])
 
 
-class BallQueryDense(Function):
-    @staticmethod
-    def forward(ctx, radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None):
-        # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
-        if new_xyz.is_cuda:
-            return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
-        else:
-            return tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
+def ball_query_dense(radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None, sort=False):
+    # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
+    if new_xyz.is_cuda:
+        if sort:
+            raise NotImplementedError("CUDA version does not sort the neighbors")
+        ind, dist = tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
+    else:
+        ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0, sorted=sort)
+    positive = dist > 0
+    dist[positive] = torch.sqrt(dist[positive])
+    return ind, dist
 
-    @staticmethod
-    def backward(ctx, a=None):
-        return None, None, None, None
 
-
-class BallQueryPartialDense(Function):
-    @staticmethod
-    def forward(ctx, radius, nsample, x, y, batch_x, batch_y):
-        # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
-        if x.is_cuda:
-            return tpcuda.ball_query_partial_dense(x, y, batch_x, batch_y, radius, nsample)
-        else:
-            ind, dist = tpcpu.batch_ball_query(x, y, batch_x, batch_y, radius, nsample, mode=0)
-            return ind, dist
-
-    @staticmethod
-    def backward(ctx, a=None):
-        return None, None, None, None
+def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y, sort=False):
+    # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
+    if x.is_cuda:
+        if sort:
+            raise NotImplementedError("CUDA version does not sort the neighbors")
+        ind, dist = tpcuda.ball_query_partial_dense(x, y, batch_x, batch_y, radius, nsample)
+    else:
+        ind, dist = tpcpu.batch_ball_query(x, y, batch_x, batch_y, radius, nsample, mode=0, sorted=sort)
+    positive = dist > 0
+    dist[positive] = torch.sqrt(dist[positive])
+    return ind, dist
 
 
 def ball_query(
@@ -183,6 +180,7 @@ def ball_query(
     mode: Optional[str] = "dense",
     batch_x: Optional[torch.tensor] = None,
     batch_y: Optional[torch.tensor] = None,
+    sort: Optional[bool] = False,
 ) -> torch.Tensor:
     """
     Arguments:
@@ -197,11 +195,12 @@ def ball_query(
     Keyword Arguments:
         batch_x -- (M, ) [partial_dense] or (B, M, 3) [dense] Contains indexes to indicate within batch it belongs to.
         batch_y -- (N, ) Contains indexes to indicate within batch it belongs to
+        sort -- bool wether the neighboors are sorted or not (closests first)
 
     Returns:
         idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
-        dist2: (N, nsample) or (B, npoint, nsample)  Default value: -1.
-                 It contains the square distances of the element within x at radius distance to y
+        dist: (N, nsample) or (B, npoint, nsample)  Default value: -1.
+                 It contains the distance of the element within x at radius distance to y
     """
     if mode is None:
         raise Exception('The mode should be defined within ["partial_dense | dense"]')
@@ -212,12 +211,12 @@ def ball_query(
         assert x.size(0) == batch_x.size(0)
         assert y.size(0) == batch_y.size(0)
         assert x.dim() == 2
-        return BallQueryPartialDense.apply(radius, nsample, x, y, batch_x, batch_y)
+        return ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y, sort=sort)
 
     elif mode.lower() == "dense":
         if (batch_x is not None) or (batch_y is not None):
             raise Exception("batch_x and batch_y should not be provided")
         assert x.dim() == 3
-        return BallQueryDense.apply(radius, nsample, x, y)
+        return ball_query_dense(radius, nsample, x, y, sort=sort)
     else:
         raise Exception("unrecognized mode {}".format(mode))

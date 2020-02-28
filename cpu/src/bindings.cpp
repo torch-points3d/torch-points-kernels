@@ -28,7 +28,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
           "maximum number of neighbors found if mode = 0, if mode=1 return a "
           "tensor of size Num_edge x 2 and return a tensor containing the "
           "squared distance of the neighbors",
-          "support"_a, "querry"_a, "radius"_a, "max_num"_a = -1, "mode"_a = 0);
+          "support"_a, "querry"_a, "radius"_a, "max_num"_a = -1, "mode"_a = 0, "sorted"_a = false);
 
     m.def("batch_ball_query", &batch_ball_query,
           "compute the radius search of a point cloud for each batch using "
@@ -53,7 +53,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
           "tensor of size Num_edge x 2 and return a tensor containing the "
           "squared distance of the neighbors",
           "support"_a, "querry"_a, "query_batch"_a, "support_batch"_a, "radius"_a, "max_num"_a = -1,
-          "mode"_a = 0);
+          "mode"_a = 0, "sorted"_a = false);
     m.def("dense_ball_query", &dense_ball_query,
           "compute the radius search of a batch of point cloud using nanoflann"
           "- support : a pytorch tensor of size B x N1 x 3, points where the "
@@ -69,5 +69,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
           "maximum number of neighbors found if mode = 0, if mode=1 return a "
           "tensor of size Num_edge x 2 and return a tensor containing the "
           "squared distance of the neighbors",
-          "support"_a, "querry"_a, "radius"_a, "max_num"_a = -1, "mode"_a = 0);
+          "support"_a, "querry"_a, "radius"_a, "max_num"_a = -1, "mode"_a = 0, "sorted"_a = false);
 }
