@@ -3,7 +3,7 @@
 #include "utils.h"
 
 void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius, int nsample,
-                                           const float* new_xyz, const float* xyz, int* idx,
+                                           const float* new_xyz, const float* xyz, long* idx,
                                            float* dist_out);
 
 void query_ball_point_kernel_partial_wrapper(long batch_size, int size_x, int size_y, float radius,
@@ -25,7 +25,7 @@ std::pair<at::Tensor, at::Tensor> ball_query_dense(at::Tensor new_xyz, at::Tenso
     }
 
     at::Tensor idx = torch::zeros({new_xyz.size(0), new_xyz.size(1), nsample},
-                                  at::device(new_xyz.device()).dtype(at::ScalarType::Int));
+                                  at::device(new_xyz.device()).dtype(at::ScalarType::Long));
     at::Tensor dist = torch::full({new_xyz.size(0), new_xyz.size(1), nsample}, -1,
                                   at::device(new_xyz.device()).dtype(at::ScalarType::Float));
 
@@ -33,7 +33,7 @@ std::pair<at::Tensor, at::Tensor> ball_query_dense(at::Tensor new_xyz, at::Tenso
     {
         query_ball_point_kernel_dense_wrapper(
             xyz.size(0), xyz.size(1), new_xyz.size(1), radius, nsample, new_xyz.DATA_PTR<float>(),
-            xyz.DATA_PTR<float>(), idx.DATA_PTR<int>(), dist.DATA_PTR<float>());
+            xyz.DATA_PTR<float>(), idx.DATA_PTR<long>(), dist.DATA_PTR<float>());
     }
     else
     {
