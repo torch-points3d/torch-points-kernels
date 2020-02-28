@@ -14,24 +14,24 @@ class TestBall(unittest.TestCase):
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]], [[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float).cuda()
         b = torch.tensor([[[0, 0, 0]], [[3, 0, 0]]]).to(torch.float).cuda()
         idx, dist = ball_query(1.01, 2, a, b)
-        torch.testing.assert_allclose(idx.long().cpu(), torch.tensor([[[0, 1]], [[2, 2]]]))
+        torch.testing.assert_allclose(idx.cpu(), torch.tensor([[[0, 1]], [[2, 2]]]))
         torch.testing.assert_allclose(dist.cpu(), torch.tensor([[[0, 1]], [[1, -1]]]).float())
 
     def test_simple_cpu(self):
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [2, 0, 0]], [[0, 0, 0], [1, 0, 0], [2, 0, 0]]]).to(torch.float)
         b = torch.tensor([[[0, 0, 0]], [[3, 0, 0]]]).to(torch.float)
         idx, dist = ball_query(1.01, 2, a, b)
-        torch.testing.assert_allclose(idx.long(), torch.tensor([[[0, 1]], [[2, 2]]]))
+        torch.testing.assert_allclose(idx, torch.tensor([[[0, 1]], [[2, 2]]]))
         torch.testing.assert_allclose(dist, torch.tensor([[[0, 1]], [[1, -1]]]).float())
 
         a = torch.tensor([[[0, 0, 0], [1, 0, 0], [1, 1, 0]]]).to(torch.float)
         idx, dist = ball_query(1.01, 3, a, a)
-        torch.testing.assert_allclose(idx.long(),torch.tensor([[[0, 1, 0],[1,0,2],[2,1,2]]]))
+        torch.testing.assert_allclose(idx, torch.tensor([[[0, 1, 0], [1, 0, 2], [2, 1, 2]]]))
 
     @run_if_cuda
     def test_larger_gpu(self):
         a = torch.randn(32, 4096, 3).to(torch.float).cuda()
-        idx,dist = ball_query(1, 64, a, a)
+        idx, dist = ball_query(1, 64, a, a)
         self.assertGreaterEqual(idx.min(), 0)
 
     @run_if_cuda
