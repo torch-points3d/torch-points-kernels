@@ -47,7 +47,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
 
     // Search params
     nanoflann::SearchParams search_params;
-    search_params.sorted = true;
+    search_params.sorted = false;
     std::vector<std::vector<std::pair<size_t, scalar_t>>> list_matches(pcd_query.pts.size());
 
     for (auto& p0 : pcd_query.pts)
@@ -173,7 +173,7 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     // ***********************
     // Search params
     nanoflann::SearchParams search_params;
-    search_params.sorted = true;
+    search_params.sorted = false;
     for (auto& p0 : query_pcd.pts)
     {
         // Check if we changed batch
