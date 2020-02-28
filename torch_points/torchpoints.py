@@ -5,22 +5,10 @@ import sys
 from typing import Optional, Any, Tuple
 
 import torch_points.points_cpu as tpcpu
+from .knn import knn
 
 if torch.cuda.is_available():
     import torch_points.points_cuda as tpcuda
-
-
-class FurthestPointSampling(Function):
-    @staticmethod
-    def forward(ctx, xyz, npoint):
-        if xyz.is_cuda:
-            return tpcuda.furthest_point_sampling(xyz, npoint)
-        else:
-            raise NotImplementedError
-
-    @staticmethod
-    def backward(xyz, a=None):
-        return None, None
 
 
 def furthest_point_sample(xyz, npoint):
@@ -41,67 +29,12 @@ def furthest_point_sample(xyz, npoint):
     torch.Tensor
         (B, npoint) tensor containing the set
     """
-    return FurthestPointSampling.apply(xyz, npoint)
-
-
-class GatherOperation(Function):
-    @staticmethod
-    def forward(ctx, features, idx):
-        # type: (Any, torch.Tensor, torch.Tensor) -> torch.Tensor
-        _, C, N = features.size()
-
-        ctx.for_backwards = (idx, C, N)
-
-        if features.is_cuda:
-            return tpcuda.gather_points(features, idx)
-        else:
-            return tpcpu.gather_points(features, idx)
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        idx, C, N = ctx.for_backwards
-
-        if grad_out.is_cuda:
-            grad_features = tpcuda.gather_points_grad(grad_out.contiguous(), idx, N)
-            return grad_features, None
-        else:
-            raise NotImplementedError
-
-
-def gather_operation(features, idx):
-    r"""
-
-       Parameters
-       ----------
-       features : torch.Tensor
-           (B, C, N) tensor
-
-       idx : torch.Tensor
-           (B, npoint) tensor of the features to gather
-
-       Returns
-       -------
-       torch.Tensor
-           (B, C, npoint) tensor
-       """
-    return GatherOperation.apply(features, idx)
-
-
-class ThreeNN(Function):
-    @staticmethod
-    def forward(ctx, unknown, known):
-        # type: (Any, torch.Tensor, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]
-
-        if unknown.is_cuda:
-            dist2, idx = tpcuda.three_nn(unknown, known)
-        else:
-            raise NotImplementedError
-
-        return torch.sqrt(dist2), idx
-
-    @staticmethod
-    def backward(ctx, a=None, b=None):
-        return None, None
+    if npoint > xyz.shape[1]:
+        raise ValueError("caanot sample %i points from an input set of %i points" % (npoint, xyz.shape[1]))
+    if xyz.is_cuda:
+        return tpcuda.furthest_point_sampling(xyz, npoint)
+    else:
+        return tpcpu.fps(xyz, npoint, True)
 
 
 def three_nn(unknown, known):
@@ -121,7 +54,14 @@ def three_nn(unknown, known):
     idx : torch.Tensor
         (B, n, 3) index of 3 nearest neighbors
     """
-    return ThreeNN.apply(unknown, known)
+    if unknown.shape[1] < 3:
+        raise ValueError("Not enough points. unknown should ahve at least 3 points.")
+    if unknown.is_cuda:
+        dist2, idx = tpcuda.three_nn(unknown, known)
+    else:
+        idx, dist2 = knn(known, unknown, 3)
+
+    return torch.sqrt(dist2), idx
 
 
 class ThreeInterpolate(Function):
@@ -136,7 +76,7 @@ class ThreeInterpolate(Function):
         if features.is_cuda:
             return tpcuda.three_interpolate(features, idx, weight)
         else:
-            raise NotImplementedError
+            return tpcpu.knn_interpolate(features, idx, weight)
 
     @staticmethod
     def backward(ctx, grad_out):
@@ -161,7 +101,7 @@ class ThreeInterpolate(Function):
         if grad_out.is_cuda:
             grad_features = tpcuda.three_interpolate_grad(grad_out.contiguous(), idx, weight, m)
         else:
-            raise NotImplementedError
+            grad_features = tpcpu.knn_interpolate_grad(grad_out.contiguous(), idx, weight, m)
 
         return grad_features, None, None
 
@@ -186,46 +126,6 @@ def three_interpolate(features, idx, weight):
     return ThreeInterpolate.apply(features, idx, weight)
 
 
-class GroupingOperation(Function):
-    @staticmethod
-    def forward(ctx, features, idx):
-        # type: (Any, torch.Tensor, torch.Tensor) -> torch.Tensor
-        B, nfeatures, nsample = idx.size()
-        _, C, N = features.size()
-
-        ctx.for_backwards = (idx, N)
-
-        if features.is_cuda:
-            return tpcuda.group_points(features, idx)
-        else:
-            return tpcpu.group_points(features, idx)
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        # type: (Any, torch.tensor) -> Tuple[torch.Tensor, torch.Tensor]
-        r"""
-
-        Parameters
-        ----------
-        grad_out : torch.Tensor
-            (B, C, npoint, nsample) tensor of the gradients of the output from forward
-
-        Returns
-        -------
-        torch.Tensor
-            (B, C, N) gradient of the features
-        None
-        """
-        idx, N = ctx.for_backwards
-
-        if grad_out.is_cuda:
-            grad_features = tpcuda.group_points_grad(grad_out.contiguous(), idx, N)
-        else:
-            raise NotImplementedError
-
-        return grad_features, None
-
-
 def grouping_operation(features, idx):
     r"""
     Parameters
@@ -240,7 +140,10 @@ def grouping_operation(features, idx):
     torch.Tensor
         (B, C, npoint, nsample) tensor
     """
-    return GroupingOperation.apply(features, idx)
+    all_idx = idx.reshape(idx.shape[0], -1)
+    all_idx = all_idx.unsqueeze(1).repeat(1, features.shape[1], 1)
+    grouped_features = features.gather(2, all_idx)
+    return grouped_features.reshape(idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2])
 
 
 class BallQueryDense(Function):
@@ -250,8 +153,7 @@ class BallQueryDense(Function):
         if new_xyz.is_cuda:
             return tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
         else:
-            ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
-            return ind
+            return tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0)
 
     @staticmethod
     def backward(ctx, a=None):
@@ -298,7 +200,7 @@ def ball_query(
 
     Returns:
         idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
-        OPTIONAL[partial_dense] dist2: (N, nsample) Default value: -1.
+        dist2: (N, nsample) or (B, npoint, nsample)  Default value: -1.
                  It contains the square distances of the element within x at radius distance to y
     """
     if mode is None:

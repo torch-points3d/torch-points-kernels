@@ -1,11 +1,17 @@
 #include "ball_query.h"
-#include "group_points.h"
+#include "fps.h"
+#include "interpolate.h"
+#include "knn.h"
 
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
-    m.def("group_points", &group_points);
+    m.def("dense_knn", &dense_knn, "", "support"_a, "querry"_a, "k"_a);
+    m.def("knn_interpolate", &knn_interpolate, "", "features"_a, "idx"_a, "weights"_a);
+    m.def("knn_interpolate_grad", &knn_interpolate_grad, "", "grad_out"_a, "idx"_a, "weights"_a,
+          "m"_a);
+    m.def("fps", &fps, "", "points"_a, "num_samples"_a, "random"_a);
 
     m.def("ball_query", &ball_query,
           "compute the radius search of a point cloud using nanoflann"
