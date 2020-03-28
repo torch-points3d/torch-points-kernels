@@ -1,6 +1,9 @@
 name: Deploy
 
-on: [push]
+on:
+  push:
+    tags:
+    - '*v'
 
 jobs:
     unittests:
@@ -31,7 +34,6 @@ jobs:
               run: |
                   python setup.py sdist
             - name: Publish package
-              # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
               uses: pypa/gh-action-pypi-publish@master
               with:
                 user: __token__
