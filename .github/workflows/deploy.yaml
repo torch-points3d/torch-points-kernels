@@ -27,7 +27,7 @@ jobs:
             - name: Test with unittest
               run: |
                   python -m unittest -v
-            -name: Build package
+            - name: Build package
               run: |
                   python setup.py sdist
             - name: Publish package
