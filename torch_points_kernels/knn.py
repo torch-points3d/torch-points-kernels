@@ -1,4 +1,4 @@
-import torch_points.points_cpu as tpcpu
+import torch_points_kernels.points_cpu as tpcpu
 
 
 def knn(pos_support, pos, k):

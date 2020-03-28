@@ -1,6 +1,6 @@
 import unittest
 import torch
-from torch_points import ball_query
+from torch_points_kernels import ball_query
 import numpy.testing as npt
 import numpy as np
 from sklearn.neighbors import KDTree

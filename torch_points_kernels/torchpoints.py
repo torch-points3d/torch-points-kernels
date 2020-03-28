@@ -4,11 +4,11 @@ import torch.nn as nn
 import sys
 from typing import Optional, Any, Tuple
 
-import torch_points.points_cpu as tpcpu
+import torch_points_kernels.points_cpu as tpcpu
 from .knn import knn
 
 if torch.cuda.is_available():
-    import torch_points.points_cuda as tpcuda
+    import torch_points_kernels.points_cuda as tpcuda
 
 
 def furthest_point_sample(xyz, npoint):

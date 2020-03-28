@@ -2,7 +2,7 @@ import unittest
 import torch
 import numpy as np
 import numpy.testing as npt
-from torch_points import grouping_operation
+from torch_points_kernels import grouping_operation
 
 
 class TestGroup(unittest.TestCase):

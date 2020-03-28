@@ -6,7 +6,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
-from torch_points.points_cpu import fps
+from torch_points_kernels.points_cpu import fps
 
 
 class TestFps(unittest.TestCase):
