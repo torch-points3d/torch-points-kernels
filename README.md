@@ -1,6 +1,8 @@
 # 3D Point Cloud Kernels
 Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point clouds.
 
+![Deploy](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Deploy/badge.svg) ![Unittests](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Unittests/badge.svg)
+
 ## Installation
 Requires torch version 1.0 or higher. To install a specific version replace the version number with a given tag.
 ```
