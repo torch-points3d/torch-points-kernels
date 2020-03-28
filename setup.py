@@ -48,7 +48,7 @@ ext_modules.append(
 requirements = ["torch>=1.1.0"]
 
 url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
-__version__="0.5.0"
+__version__="0.5.1"
 setup(
     name="torch-points-kernels",
     version=__version__,
