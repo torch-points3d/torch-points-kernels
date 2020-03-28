@@ -16,7 +16,8 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install torch numpy scikit-learn flake8 setuptools wheel twine
             - name: Build package
-              run: python setup.py build_ext --inplace
+              run: |
+                  python setup.py build_ext --inplace
             - name: Lint with flake8
               run: |
                   # stop the build if there are Python syntax errors or undefined names
@@ -24,9 +25,11 @@ jobs:
                   # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
                   flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
             - name: Test with unittest
-              run: python -m unittest -v
+              run: |
+                  python -m unittest -v
             -name: Build package
-              run: python setup.py sdist
+              run: |
+                  python setup.py sdist
             - name: Publish package
               # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
               uses: pypa/gh-action-pypi-publish@master
