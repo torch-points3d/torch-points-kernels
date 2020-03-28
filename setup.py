@@ -21,7 +21,7 @@ ext_modules = []
 if CUDA_HOME:
     ext_modules.append(
         CUDAExtension(
-            name="torch_points.points_cuda",
+            name="torch_points_kernels.points_cuda",
             sources=ext_sources,
             include_dirs=["{}/include".format(ext_src_root)],
             extra_compile_args={"cxx": extra_compile_args, "nvcc": extra_compile_args,},
@@ -33,7 +33,7 @@ cpu_ext_sources = glob.glob("{}/src/*.cpp".format(cpu_ext_src_root))
 
 ext_modules.append(
     CppExtension(
-        name="torch_points.points_cpu",
+        name="torch_points_kernels.points_cpu",
         sources=cpu_ext_sources,
         include_dirs=["{}/include".format(cpu_ext_src_root)],
         extra_compile_args={"cxx": extra_compile_args,},
@@ -42,11 +42,15 @@ ext_modules.append(
 
 requirements = ["torch>=1.1.0"]
 
+url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
+__version__="0.5.0"
 setup(
-    name="torch_points",
-    version="0.4.1",
+    name="torch-points-kernels",
+    version=__version__,
     author="Nicolas Chaulet",
     packages=find_packages(),
+    url=url,
+    download_url='{}/archive/{}.tar.gz'.format(url, __version__),
     install_requires=requirements,
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension},

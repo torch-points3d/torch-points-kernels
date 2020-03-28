@@ -1,7 +1,7 @@
 import unittest
 import torch
 from torch.autograd import gradcheck
-from torch_points import three_interpolate, three_nn
+from torch_points_kernels import three_interpolate, three_nn
 
 from . import run_if_cuda
 

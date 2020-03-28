@@ -36,4 +36,4 @@ build
 
 .vscode/
 dist/
-torch_points.egg-info/
+torch_points_kernels.egg-info/

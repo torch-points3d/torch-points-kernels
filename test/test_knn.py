@@ -6,7 +6,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
-from torch_points import three_nn, knn
+from torch_points_kernels import three_nn, knn
 from . import run_if_cuda
 
 

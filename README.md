@@ -14,7 +14,7 @@ poetry add git+https://github.com/nicolas-chaulet/torch-points.git#v0.2.3
 ## Usage
 ```
 import torch
-import torch_points.points_cuda
+import torch_points_kernels.points_cuda
 ```
 
 ## Build and test
