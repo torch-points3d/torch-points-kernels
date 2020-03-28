@@ -8,6 +8,11 @@ from torch.utils.cpp_extension import (
 )
 import glob
 
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 TORCH_MAJOR = int(torch.__version__.split(".")[0])
 TORCH_MINOR = int(torch.__version__.split(".")[1])
 extra_compile_args = []
@@ -54,4 +59,6 @@ setup(
     install_requires=requirements,
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension},
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )
