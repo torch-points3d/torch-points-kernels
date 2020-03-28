@@ -1,14 +1,14 @@
-# torch-points
-Pytorch kernels for pointnet++ like architectures
+# 3D Point Cloud Kernels
+Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point clouds.
 
 ## Installation
 Requires torch version 1.0 or higher. To install a specific version replace the version number with a given tag.
 ```
-pip install git+https://github.com/nicolas-chaulet/torch-points.git#v0.2.3
+pip install git+https://github.com/nicolas-chaulet/torch-points-kernels.git#v0.5.0
 ```
 or with poetry:
 ```
-poetry add git+https://github.com/nicolas-chaulet/torch-points.git#v0.2.3
+poetry add git+https://github.com/nicolas-chaulet/torch-points.git#v0.5.0
 ```
 
 ## Usage
@@ -25,10 +25,7 @@ python -m unittest
 
 ## Projects using those kernels.
 
-[```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks) by
-* [Thomas Chaton](https://github.com/tchaton)
-* Nicolas Chaulet
-* [Tristan Heywood](https://github.com/tristanheywood)
+[```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks)
 
 ## Credit
 
