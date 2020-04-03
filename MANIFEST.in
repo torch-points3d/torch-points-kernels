@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+
+recursive-exclude test *
+recursive-include cpu *
+recursive-include cuda *
