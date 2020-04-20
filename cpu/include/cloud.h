@@ -31,48 +31,29 @@
 
 template <typename scalar_t> struct PointCloud
 {
-    struct PointXYZ
-    {
-        scalar_t x, y, z;
-    };
-
-    std::vector<PointXYZ> pts;
-
     void set(const std::vector<scalar_t>& new_pts)
     {
-        pts.clear();
-        pts.resize(new_pts.size() / 3);
-        for (unsigned int i = 0; i < new_pts.size(); i++)
-        {
-            if (i % 3 == 0)
-            {
-                PointXYZ point;
-                point.x = new_pts[i];
-                point.y = new_pts[i + 1];
-                point.z = new_pts[i + 2];
-                pts[i / 3] = point;
-            }
-        }
+        pts = new_pts.data();
+        length = new_pts.size() / 3;
     }
     void set_batch(const std::vector<scalar_t>& new_pts, int begin, int end)
     {
-        int size = end - begin;
-        pts.clear();
-        pts.resize(size);
-        for (int i = 0; i < size; i++)
-        {
-            PointXYZ point;
-            point.x = new_pts[3 * (begin + i)];
-            point.y = new_pts[3 * (begin + i) + 1];
-            point.z = new_pts[3 * (begin + i) + 2];
-            pts[i] = point;
-        }
+        pts = new_pts.data();
+        int start = begin * 3;
+        pts += start;
+        length = (end - begin);
     }
 
     // Must return the number of data points
     inline size_t kdtree_get_point_count() const
     {
-        return pts.size();
+        return get_point_count();
+    }
+
+    // Must return the number of data points
+    inline size_t get_point_count() const
+    {
+        return length;
     }
 
     // Returns the dim'th component of the idx'th point in the class:
@@ -82,11 +63,11 @@ template <typename scalar_t> struct PointCloud
     inline scalar_t kdtree_get_pt(const size_t idx, const size_t dim) const
     {
         if (dim == 0)
-            return pts[idx].x;
+            return pts[idx * 3];
         else if (dim == 1)
-            return pts[idx].y;
+            return pts[idx * 3 + 1];
         else
-            return pts[idx].z;
+            return pts[idx * 3 + 2];
     }
 
     // Optional bounding-box computation: return false to default to a standard
@@ -98,4 +79,29 @@ template <typename scalar_t> struct PointCloud
     {
         return false;
     }
+
+    const scalar_t* get_point_ptr(const int i) const
+    {
+        return pts + i * 3;
+    }
+
+    std::array<scalar_t, 3> operator[](const size_t index) const
+    {
+        return {pts[index * 3], pts[index * 3 + 1], pts[index * 3 + 2]};
+    }
+
+private:
+    const scalar_t* pts;
+    size_t length;
 };
+
+template <typename scalar_t>
+inline std::ostream& operator<<(std::ostream& os, const PointCloud<scalar_t>& P)
+{
+    for (size_t i = 0; i < P.get_point_count(); i++)
+    {
+        auto p = P[i];
+        os << "[" << p[0] << ", " << p[1] << ", " << p[2] << "];";
+    }
+    return os;
+}

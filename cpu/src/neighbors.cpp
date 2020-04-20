@@ -2,6 +2,7 @@
 // Taken from https://github.com/HuguesTHOMAS/KPConv
 
 #include "neighbors.h"
+#include <chrono>
 #include <random>
 
 template <typename scalar_t>
@@ -29,6 +30,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
     // CLoud variable
     PointCloud<scalar_t> pcd;
     pcd.set(supports);
+
     // Cloud query
     PointCloud<scalar_t> pcd_query;
     pcd_query.set(queries);
@@ -50,17 +52,17 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
     // Search params
     nanoflann::SearchParams search_params;
     search_params.sorted = sorted;
-    std::vector<std::vector<std::pair<size_t, scalar_t>>> list_matches(pcd_query.pts.size());
+    auto num_query_points = pcd_query.get_point_count();
+    std::vector<std::vector<std::pair<size_t, scalar_t>>> list_matches(num_query_points);
 
-    for (auto& p0 : pcd_query.pts)
+    for (size_t i = 0; i < num_query_points; i++)
     {
         // Find neighbors
-        scalar_t query_pt[3] = {p0.x, p0.y, p0.z};
         list_matches[i0].reserve(max_count);
         std::vector<std::pair<size_t, scalar_t>> ret_matches;
 
-        const size_t nMatches =
-            index->radiusSearch(&query_pt[0], search_radius, ret_matches, search_params);
+        const size_t nMatches = index->radiusSearch(pcd_query.get_point_ptr(i), search_radius,
+                                                    ret_matches, search_params);
         if (nMatches == 0)
             list_matches[i0] = {std::make_pair(0, -1)};
         else
@@ -164,10 +166,11 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     PointCloud<scalar_t> current_cloud;
     PointCloud<scalar_t> query_pcd;
     query_pcd.set(queries);
-    vector<vector<pair<size_t, scalar_t>>> all_inds_dists(query_pcd.pts.size());
+    auto num_query_points = query_pcd.get_point_count();
+    vector<vector<pair<size_t, scalar_t>>> all_inds_dists(num_query_points);
 
     // Tree parameters
-    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(10 /* max leaf */);
+    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(15 /* max leaf */);
 
     // KDTree type definition
     typedef nanoflann::KDTreeSingleIndexAdaptor<
@@ -178,25 +181,24 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
     std::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, current_cloud, tree_params));
     index->buildIndex();
+
     // Search neigbors indices
     // ***********************
     // Search params
     nanoflann::SearchParams search_params;
     search_params.sorted = sorted;
-    for (auto& p0 : query_pcd.pts)
+    std::chrono::microseconds duration_search(0);
+    for (size_t i = 0; i < num_query_points; i++)
     {
         // Check if we changed batch
-
         if (i0 == q_batches[b + 1] && b < (int)s_batches.size() - 1 &&
             b < (int)q_batches.size() - 1)
         {
             // Change the points
             b++;
-            current_cloud.pts.clear();
             if (s_batches[b] < s_batches[b + 1])
                 current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
 
-            // Build KDTree of the current element of the batch
             index.reset(new my_kd_tree_t(3, current_cloud, tree_params));
             index->buildIndex();
         }
@@ -204,8 +206,8 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
         // Find neighboors
         std::vector<std::pair<size_t, scalar_t>> ret_matches;
         ret_matches.reserve(max_count);
-        scalar_t query_pt[3] = {p0.x, p0.y, p0.z};
-        size_t nMatches = index->radiusSearch(query_pt, r2, ret_matches, search_params);
+        size_t nMatches =
+            index->radiusSearch(query_pcd.get_point_ptr(i), r2, ret_matches, search_params);
 
         // Shuffle if needed
         if (!sorted)
@@ -225,8 +227,8 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     const int token = -1;
     if (mode == 0)
     {
-        neighbors_indices.resize(query_pcd.pts.size() * max_count);
-        dists.resize(query_pcd.pts.size() * max_count);
+        neighbors_indices.resize(query_pcd.get_point_count() * max_count);
+        dists.resize(query_pcd.get_point_count() * max_count);
         i0 = 0;
         b = 0;
 
@@ -319,14 +321,15 @@ void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppor
     // Search neigbors indices
     // ***********************
     size_t current_pos = 0;
-    for (auto& p0 : pcd_query.pts)
+    auto num_query_points = pcd_query.get_point_count();
+    for (size_t i = 0; i < num_query_points; i++)
     {
         // Find neighbors
-        scalar_t query_pt[3] = {p0.x, p0.y, p0.z};
         std::vector<size_t> ret_index(k);
         std::vector<scalar_t> out_dist_sqr(k);
 
-        const size_t nMatches = index->knnSearch(&query_pt[0], k, &ret_index[0], &out_dist_sqr[0]);
+        const size_t nMatches =
+            index->knnSearch(pcd_query.get_point_ptr(i), k, &ret_index[0], &out_dist_sqr[0]);
         for (size_t i = 0; i < nMatches; i++)
         {
             neighbors_indices[i + current_pos] = ret_index[i];
