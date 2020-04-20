@@ -36,7 +36,7 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
     pcd_query.set(queries);
 
     // Tree parameters
-    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(10 /* max leaf */);
+    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(15 /* max leaf */);
 
     // KDTree type definition
     typedef nanoflann::KDTreeSingleIndexAdaptor<
@@ -170,7 +170,7 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     vector<vector<pair<size_t, scalar_t>>> all_inds_dists(num_query_points);
 
     // Tree parameters
-    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(10 /* max leaf */);
+    nanoflann::KDTreeSingleIndexAdaptorParams tree_params(15 /* max leaf */);
 
     // KDTree type definition
     typedef nanoflann::KDTreeSingleIndexAdaptor<
@@ -179,12 +179,8 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
 
     // Build KDTree for the first batch element
     current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
-    auto start = std::chrono::high_resolution_clock::now();
     std::unique_ptr<my_kd_tree_t> index(new my_kd_tree_t(3, current_cloud, tree_params));
     index->buildIndex();
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Build index " << duration.count() << endl;
 
     // Search neigbors indices
     // ***********************
@@ -203,23 +199,15 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
             if (s_batches[b] < s_batches[b + 1])
                 current_cloud.set_batch(supports, s_batches[b], s_batches[b + 1]);
 
-            // Build KDTree of the current element of the batch
-            start = std::chrono::high_resolution_clock::now();
             index.reset(new my_kd_tree_t(3, current_cloud, tree_params));
             index->buildIndex();
-            end = std::chrono::high_resolution_clock::now();
-            duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-            std::cout << "Build index " << duration.count() << endl;
         }
 
         // Find neighboors
         std::vector<std::pair<size_t, scalar_t>> ret_matches;
         ret_matches.reserve(max_count);
-        start = std::chrono::high_resolution_clock::now();
         size_t nMatches =
             index->radiusSearch(query_pcd.get_point_ptr(i), r2, ret_matches, search_params);
-        end = std::chrono::high_resolution_clock::now();
-        duration_search += std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
         // Shuffle if needed
         if (!sorted)
@@ -232,7 +220,6 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
         // Increment query idx
         i0++;
     }
-    std::cout << "Search " << duration_search.count() << endl;
     // how many neighbors do we keep
     if (max_num > 0)
         max_count = max_num;
