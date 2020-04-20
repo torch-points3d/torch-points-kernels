@@ -70,7 +70,7 @@ class TestBallPartial(unittest.TestCase):
         dist2 = dist2.detach().cpu().numpy()
 
         idx_answer = np.asarray([[1, -1]])
-        dist2_answer = np.asarray([[0.100, -1.0000]]).astype(np.float32)
+        dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
@@ -88,7 +88,7 @@ class TestBallPartial(unittest.TestCase):
         dist2 = dist2.detach().cpu().numpy()
 
         idx_answer = np.asarray([[1, -1]])
-        dist2_answer = np.asarray([[0.100, -1.0000]]).astype(np.float32)
+        dist2_answer = np.asarray([[0.0100, -1.0000]]).astype(np.float32)
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)

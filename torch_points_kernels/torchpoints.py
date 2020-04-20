@@ -154,8 +154,6 @@ def ball_query_dense(radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xy
         ind, dist = tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
     else:
         ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0, sorted=sort)
-    positive = dist > 0
-    dist[positive] = torch.sqrt(dist[positive])
     return ind, dist
 
 
@@ -167,8 +165,6 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y, sort=False
         ind, dist = tpcuda.ball_query_partial_dense(x, y, batch_x, batch_y, radius, nsample)
     else:
         ind, dist = tpcpu.batch_ball_query(x, y, batch_x, batch_y, radius, nsample, mode=0, sorted=sort)
-    positive = dist > 0
-    dist[positive] = torch.sqrt(dist[positive])
     return ind, dist
 
 
@@ -200,7 +196,7 @@ def ball_query(
     Returns:
         idx: (npoint, nsample) or (B, npoint, nsample) [dense] It contains the indexes of the element within x at radius distance to y
         dist: (N, nsample) or (B, npoint, nsample)  Default value: -1.
-                 It contains the distance of the element within x at radius distance to y
+                 It contains the squared distance of the element within x at radius distance to y
     """
     if mode is None:
         raise Exception('The mode should be defined within ["partial_dense | dense"]')
