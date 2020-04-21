@@ -1,5 +1,6 @@
 #include "ball_query.h"
 #include "fps.h"
+#include "gridsampler.h"
 #include "interpolate.h"
 #include "knn.h"
 
@@ -70,4 +71,18 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
           "tensor of size Num_edge x 2 and return a tensor containing the "
           "squared distance of the neighbors",
           "support"_a, "querry"_a, "radius"_a, "max_num"_a = -1, "mode"_a = 0, "sorted"_a = false);
+
+    py::class_<GridSampler>(m, "GridSampler")
+        .def(py::init<const float&>())
+        .def("fit", &GridSampler::fit, "Build the grid index using the provided point locations.",
+             "points"_a)
+        .def("aggregate", &GridSampler::aggregate,
+             "Aggregate the input data based on one of the following modes"
+             "- mean takes the average within the voxel"
+             "- first takes the first element"
+             "- max_count takes the element with most occurances within that voxel",
+             "data"_a, "mode"_a = "mean")
+        .def("__repr__", [](const GridSampler& a) {
+            return "GridSampler(grid_size= '" + std::to_string(a.gridSize()) + "')";
+        });
 }
