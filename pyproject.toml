@@ -25,4 +25,4 @@ exclude = '''
 '''
 
 [build-system]
-requires = ["setuptools>=41.0", "setuptools-scm", "wheel", "torch"]
+requires = ["setuptools>=41.0", "setuptools-scm", "wheel", "torch","numpy"]
