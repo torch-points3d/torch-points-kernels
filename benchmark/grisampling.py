@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import torch.nn.functional as F
+import logging
 from torch_geometric.nn import voxel_grid
 from torch_scatter import scatter_mean, scatter_add
 from torch_geometric.nn.pool.consecutive import consecutive_cluster
@@ -12,6 +13,8 @@ from torch_cluster import grid_cluster
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
+
+log = logging.getLogger(__name__)
 
 from torch_points_kernels import GridSampler
 

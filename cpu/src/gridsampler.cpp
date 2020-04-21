@@ -18,7 +18,10 @@ void GridSampler::fit(const at::Tensor& points)
                 "Input Tensor points must be of shape [N,3]")
 
     if (!m_voxelMap.empty())
+    {
         m_voxelMap.clear();
+        m_voxels.clear();
+    }
     m_numFittedPoints = static_cast<size_t>(points.size(0));
     m_voxelMap.reserve(m_numFittedPoints);
     m_voxels.reserve(m_numFittedPoints);
