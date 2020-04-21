@@ -10,7 +10,7 @@ size_t getVoxelIdx(const long* indPtr, const long* discreteRangePtr)
                                indPtr[2] * discreteRangePtr[0] * discreteRangePtr[1]);
 }
 
-void GridSampler::fit(at::Tensor points)
+void GridSampler::fit(const at::Tensor& points)
 {
     CHECK_CONTIGUOUS(points);
     CHECK_CPU(points);
@@ -20,13 +20,15 @@ void GridSampler::fit(at::Tensor points)
     if (!m_voxelMap.empty())
         m_voxelMap.clear();
     m_numFittedPoints = static_cast<size_t>(points.size(0));
+    m_voxelMap.reserve(m_numFittedPoints);
+    m_voxels.reserve(m_numFittedPoints);
 
     // Centre to origin
     auto start = std::get<0>(points.min(0));
     auto end = std::get<0>(points.max(0));
     auto discreteRange = ((end - start) / m_gridSize).toType(torch::kLong) + 1;
-    points = points - start.unsqueeze(0);
-    auto indices = (points / m_gridSize).toType(torch::kLong);
+    auto originCentred = points - start.unsqueeze(0);
+    auto indices = (originCentred / m_gridSize).toType(torch::kLong);
 
     // Prepare for loop
     long* indicesPtr = indices.DATA_PTR<long>();
@@ -37,16 +39,19 @@ void GridSampler::fit(at::Tensor points)
         const size_t voxelIdx = getVoxelIdx(indicesPtr, discreteRangePtr);
         auto voxel = m_voxelMap.find(voxelIdx);
         if (voxel == m_voxelMap.end())
-            m_voxelMap.insert({voxelIdx, {ptIdx}});
+        {
+            m_voxelMap.insert({voxelIdx, m_voxels.size()});
+            m_voxels.push_back({ptIdx});
+        }
         else
-            voxel->second.push_back(ptIdx);
+            m_voxels[voxel->second].push_back(ptIdx);
 
         // Move to next point
         indicesPtr += 3;
     }
 }
 
-at::Tensor GridSampler::aggregate(at::Tensor data, c10::optional<std::string> mode) const
+at::Tensor GridSampler::aggregate(const at::Tensor& data, c10::optional<std::string> mode) const
 {
     // Check input
     CHECK_CONTIGUOUS(data);
@@ -66,33 +71,34 @@ at::Tensor GridSampler::aggregate(at::Tensor data, c10::optional<std::string> mo
     if (mode.value() == "mean")
         CHECK_FLOAT_TENSOR(data);
 
-    // Normalise to data of dimension 2
-    bool squeezeOutput = false;
+    // Aggregate values
+    size_t numFeats;
+    at::Tensor outTensor;
     if (data.dim() == 1)
     {
-        squeezeOutput = true;
-        data = data.view({data.size(0), 1});
+        numFeats = 1;
+        outTensor = torch::zeros({static_cast<long>(m_voxels.size())}, data.options());
     }
-
-    // Aggregate values
-    size_t numFeats = static_cast<size_t>(data.size(1));
-    at::Tensor outTensor = torch::zeros(
-        {static_cast<long>(m_voxelMap.size()), static_cast<long>(numFeats)}, data.options());
+    else
+    {
+        numFeats = static_cast<size_t>(data.size(1));
+        outTensor = torch::zeros({static_cast<long>(m_voxels.size()), static_cast<long>(numFeats)},
+                                 data.options());
+    }
     long rawResIdx, rawSourceIdx;
     AT_DISPATCH_ALL_TYPES(data.scalar_type(), "_aggregate", [&] {
         auto outPtr = outTensor.DATA_PTR<scalar_t>();
         auto dataPtr = data.DATA_PTR<scalar_t>();
         size_t resIdx = 0;
-        for (auto voxel : m_voxelMap)
+        for (auto& sourceIdx : m_voxels)
         {
-            std::vector<size_t> sourceIdx = voxel.second;
             for (size_t i = 0; i < numFeats; i++)
             {
                 rawResIdx = resIdx * numFeats + i;
                 if (mode.value() == "max_count")
                 {
                     std::map<scalar_t, size_t> counts;
-                    for (auto idx : sourceIdx)
+                    for (auto& idx : sourceIdx)
                     {
                         rawSourceIdx = idx * numFeats + i;
                         scalar_t fieldValue = dataPtr[rawSourceIdx];
@@ -126,9 +132,5 @@ at::Tensor GridSampler::aggregate(at::Tensor data, c10::optional<std::string> mo
             resIdx++;
         }
     });
-
-    // Squeeze if needed
-    if (squeezeOutput)
-        outTensor = outTensor.view({-1});
     return outTensor;
 }
