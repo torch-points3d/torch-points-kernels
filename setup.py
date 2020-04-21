@@ -15,7 +15,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 TORCH_MAJOR = int(torch.__version__.split(".")[0])
 TORCH_MINOR = int(torch.__version__.split(".")[1])
-extra_compile_args = []
+extra_compile_args = ["-O3"]
 if (TORCH_MAJOR > 1) or (TORCH_MAJOR == 1 and TORCH_MINOR > 2):
     extra_compile_args += ["-DVERSION_GE_1_3"]
 
