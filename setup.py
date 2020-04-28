@@ -60,5 +60,9 @@ setup(
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension},
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+    ],
 )

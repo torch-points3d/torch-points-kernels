@@ -1,5 +1,7 @@
 include README.md
 include LICENSE
+include CHANGELOG.md
+include pyproject.toml
 
 recursive-exclude test *
 recursive-include cpu *
