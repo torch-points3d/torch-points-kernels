@@ -15,7 +15,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 TORCH_MAJOR = int(torch.__version__.split(".")[0])
 TORCH_MINOR = int(torch.__version__.split(".")[1])
-extra_compile_args = []
+extra_compile_args = ["-O3"]
 if (TORCH_MAJOR > 1) or (TORCH_MAJOR == 1 and TORCH_MINOR > 2):
     extra_compile_args += ["-DVERSION_GE_1_3"]
 
@@ -48,7 +48,7 @@ ext_modules.append(
 requirements = ["torch>=1.1.0"]
 
 url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
-__version__="0.5.2"
+__version__="0.5.3"
 setup(
     name="torch-points-kernels",
     version=__version__,
@@ -60,5 +60,9 @@ setup(
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExtension},
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+    ],
 )
