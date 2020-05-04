@@ -1,5 +1,10 @@
 # Unreleased
 
+# 0.6.0
+
+## Bug fix
+- Require pytorch implicitely and log nice message when missing
+
 # 0.5.3
 
 ## Update
@@ -7,4 +12,4 @@
 - leaner Point Cloud struct that avoids copying data
 
 ## Bug fix
-- Pcakage would not install if pytorch is not already installed
+- Package would not install if pytorch is not already installed
