@@ -1,5 +1,10 @@
 from setuptools import setup, find_packages
-import torch
+
+try:
+    import torch
+except:
+    raise ImportError("Please install pytorch before installing torch-points-kernels")
+
 from torch.utils.cpp_extension import (
     BuildExtension,
     CUDAExtension,
@@ -48,7 +53,7 @@ ext_modules.append(
 requirements = ["torch>=1.1.0"]
 
 url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
-__version__="0.5.3"
+__version__="0.6.0"
 setup(
     name="torch-points-kernels",
     version=__version__,
