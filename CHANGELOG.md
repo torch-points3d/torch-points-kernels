@@ -1,4 +1,7 @@
-# Unreleased
+# 0.6.1
+
+## Bug fix
+- Random memory access on cpu radius search in the degree function
 
 # 0.6.0
 
