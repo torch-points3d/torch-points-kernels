@@ -1,11 +1,16 @@
 import unittest
 import torch
-from torch_points_kernels import ball_query
 import numpy.testing as npt
 import numpy as np
 from sklearn.neighbors import KDTree
+import os
+import sys
 
-from . import run_if_cuda
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+sys.path.insert(0, ROOT)
+
+from test import run_if_cuda
+from torch_points_kernels import ball_query
 
 
 class TestBall(unittest.TestCase):
@@ -76,10 +81,10 @@ class TestBallPartial(unittest.TestCase):
         npt.assert_array_almost_equal(dist2, dist2_answer)
 
     def test_simple_cpu(self):
-        x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [0.1, 0, 0]]).to(torch.float)
+        x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [10.1, 0, 0]]).to(torch.float)
         y = torch.tensor([[0, 0, 0]]).to(torch.float)
 
-        batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long()
+        batch_x = torch.from_numpy(np.asarray([0, 0, 0, 0])).long()
         batch_y = torch.from_numpy(np.asarray([0])).long()
 
         idx, dist2 = ball_query(1.0, 2, x, y, mode="PARTIAL_DENSE", batch_x=batch_x, batch_y=batch_y)
@@ -92,6 +97,17 @@ class TestBallPartial(unittest.TestCase):
 
         npt.assert_array_almost_equal(idx, idx_answer)
         npt.assert_array_almost_equal(dist2, dist2_answer)
+
+    
+    def test_breaks(self):
+        x = torch.tensor([[10, 0, 0], [0.1, 0, 0], [10, 0, 0], [10.1, 0, 0]]).to(torch.float)
+        y = torch.tensor([[0, 0, 0]]).to(torch.float)
+
+        batch_x = torch.from_numpy(np.asarray([0, 0, 1, 1])).long()
+        batch_y = torch.from_numpy(np.asarray([0])).long()
+        
+        with self.assertRaises(RuntimeError):
+            idx, dist2 = ball_query(1.0, 2, x, y, mode="PARTIAL_DENSE", batch_x=batch_x, batch_y=batch_y)
 
     def test_random_cpu(self):
         a = torch.randn(100, 3).to(torch.float)
