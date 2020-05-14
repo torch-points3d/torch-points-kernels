@@ -57,7 +57,8 @@ at::Tensor degree(at::Tensor row, int64_t num_nodes)
 {
     auto zero = at::zeros(num_nodes, row.options());
     auto one = at::ones(row.size(0), row.options());
-    return zero.scatter_add_(0, row, one);
+    auto out = zero.scatter_add_(0, row, one);
+    return out;
 }
 
 std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tensor query,
@@ -79,9 +80,13 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
     auto options_dist = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
 
     int max_count = 0;
-    auto batch_access = query_batch.accessor<int64_t, 1>();
+    auto q_batch_access = query_batch.accessor<int64_t, 1>();
+    auto s_batch_access = support_batch.accessor<int64_t, 1>();
 
-    auto batch_size = batch_access[-1] + 1;
+    auto batch_size = q_batch_access[query_batch.size(0) - 1] + 1;
+    TORCH_CHECK(batch_size == (s_batch_access[support_batch.size(0) - 1] + 1),
+                "Both batches need to have the same number of samples.")
+
     query_batch = degree(query_batch, batch_size);
     query_batch = at::cat({at::zeros(1, query_batch.options()), query_batch.cumsum(0)}, 0);
     support_batch = degree(support_batch, batch_size);
