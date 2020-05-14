@@ -55,9 +55,14 @@ std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor support, at::Tensor quer
 
 at::Tensor degree(at::Tensor row, int64_t num_nodes)
 {
+    std::cout << "-- Start degree" << std::endl;
+    std::cout << "Num nodes " << num_nodes << std::endl;
     auto zero = at::zeros(num_nodes, row.options());
+    std::cout << "Row size " << row.size(0) << std::endl;
     auto one = at::ones(row.size(0), row.options());
-    return zero.scatter_add_(0, row, one);
+    auto out = zero.scatter_add_(0, row, one);
+    std::cout << "-- End degree" << std::endl;
+    return out;
 }
 
 std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tensor query,
