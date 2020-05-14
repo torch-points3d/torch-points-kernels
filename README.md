@@ -4,7 +4,7 @@ Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point c
 ![Deploy](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Deploy/badge.svg) ![Unittests](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Unittests/badge.svg)
 
 ## Installation
-Requires torch version 1.0 or higher
+**Requires torch** version 1.0 or higher to be installed before proceeding. Once this is done, simply run
 ```
 pip install torch-points-kernels
 ```
