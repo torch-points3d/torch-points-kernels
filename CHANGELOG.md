@@ -1,3 +1,8 @@
+# 0.6.2
+
+## Bug fix
+- Fix install with pip > 19
+
 # 0.6.1
 
 ## Bug fix

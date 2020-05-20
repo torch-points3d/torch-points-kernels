@@ -8,9 +8,8 @@ try:
         CUDA_HOME,
         CppExtension,
     )
-    HAS_TORCH=True
 except:
-    HAS_TORCH=False
+    raise ModuleNotFoundError("Please install pytorch >= 1.1 before proceeding.")
     
 import glob
 
@@ -21,8 +20,6 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 
 def get_ext_modules():
-    if not HAS_TORCH:
-        return []
     TORCH_MAJOR = int(torch.__version__.split(".")[0])
     TORCH_MINOR = int(torch.__version__.split(".")[1])
     extra_compile_args = ["-O3"]
@@ -57,15 +54,12 @@ def get_ext_modules():
     return ext_modules
 
 def get_cmdclass():
-    if HAS_TORCH:
-        return {"build_ext": BuildExtension}
-    else:
-        return {}
+    return {"build_ext": BuildExtension}
 
 requirements = ["torch>=1.1.0"]
 
 url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
-__version__="0.6.1"
+__version__="0.6.2"
 setup(
     name="torch-points-kernels",
     version=__version__,
