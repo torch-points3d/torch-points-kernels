@@ -23,7 +23,3 @@ exclude = '''
   | dist
 )/
 '''
-
-[build-system]
-requires = ["setuptools>=41.0", "setuptools-scm", "wheel"]
-build-backend = "setuptools.build_meta"
