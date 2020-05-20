@@ -59,12 +59,13 @@ def get_cmdclass():
 requirements = ["torch>=1.1.0"]
 
 url = 'https://github.com/nicolas-chaulet/torch-points-kernels'
-__version__="0.6.2"
+__version__="0.6.3"
 setup(
     name="torch-points-kernels",
     version=__version__,
     author="Nicolas Chaulet",
     packages=find_packages(),
+    description="PyTorch kernels for spatial operations on point clouds"
     url=url,
     download_url='{}/archive/{}.tar.gz'.format(url, __version__),
     install_requires=requirements,
