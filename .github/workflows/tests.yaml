@@ -10,11 +10,9 @@ jobs:
   unittests:
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      matrix:
+        os: [ubuntu-latest, macos-latest]
         python-version: [3.6, 3.7]
+    runs-on: ${{ matrix.os }}
     steps:
         - uses: actions/checkout@v2
         - name: Set up Python ${{ matrix.python-version }}
