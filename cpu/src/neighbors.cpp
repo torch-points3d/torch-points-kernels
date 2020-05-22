@@ -7,7 +7,7 @@
 
 template <typename scalar_t>
 int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                        vector<long>& neighbors_indices, vector<float>& dists, float radius,
+                        vector<int64_t>& neighbors_indices, vector<float>& dists, float radius,
                         int max_num, int mode, bool sorted)
 {
     // Initiate variables
@@ -138,9 +138,9 @@ int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
 
 template <typename scalar_t>
 int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                              vector<long>& q_batches, vector<long>& s_batches,
-                              vector<long>& neighbors_indices, vector<float>& dists, float radius,
-                              int max_num, int mode, bool sorted)
+                              vector<int64_t>& q_batches, vector<int64_t>& s_batches,
+                              vector<int64_t>& neighbors_indices, vector<float>& dists,
+                              float radius, int max_num, int mode, bool sorted)
 {
     // Initiate variables
     // ******************
@@ -187,7 +187,6 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
     // Search params
     nanoflann::SearchParams search_params;
     search_params.sorted = sorted;
-    std::chrono::microseconds duration_search(0);
     for (size_t i = 0; i < num_query_points; i++)
     {
         // Check if we changed batch
@@ -295,7 +294,7 @@ int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& suppo
 
 template <typename scalar_t>
 void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                             vector<long>& neighbors_indices, vector<float>& dists, int k)
+                             vector<int64_t>& neighbors_indices, vector<float>& dists, int k)
 {
     // Nanoflann related variables
     // ***************************

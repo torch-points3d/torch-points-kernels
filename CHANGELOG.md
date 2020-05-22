@@ -1,3 +1,8 @@
+# UNRELEASED
+
+## Bug fix
+- CPU version works for MacOS
+
 # 0.6.2
 
 ## Bug fix

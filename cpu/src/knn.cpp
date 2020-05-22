@@ -12,7 +12,7 @@ std::pair<at::Tensor, at::Tensor> _single_batch_knn(at::Tensor support, at::Tens
     if (support.size(0) < k)
         TORCH_CHECK(false,
                     "Not enough points in support to find " + std::to_string(k) + " neighboors")
-    std::vector<long> neighbors_indices(query.size(0) * k, -1);
+    std::vector<int64_t> neighbors_indices(query.size(0) * k, -1);
     std::vector<float> neighbors_dists(query.size(0) * k, -1);
 
     auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
@@ -29,7 +29,7 @@ std::pair<at::Tensor, at::Tensor> _single_batch_knn(at::Tensor support, at::Tens
                                           neighbors_dists, k);
     });
     auto neighbors_dists_ptr = neighbors_dists.data();
-    long* neighbors_indices_ptr = neighbors_indices.data();
+    int64_t* neighbors_indices_ptr = neighbors_indices.data();
     auto out = torch::from_blob(neighbors_indices_ptr, {query.size(0), k}, options = options);
     auto out_dists =
         torch::from_blob(neighbors_dists_ptr, {query.size(0), k}, options = options_dist);
