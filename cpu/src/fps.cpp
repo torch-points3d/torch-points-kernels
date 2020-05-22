@@ -15,7 +15,7 @@ at::Tensor fps(at::Tensor points, const int nsamples, bool random)
     auto out_options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
     auto batch_size = points.size(0);
     auto out = torch::empty({batch_size, nsamples}, out_options);
-    auto out_a = out.accessor<long, 2>();
+    auto out_a = out.accessor<int64_t, 2>();
 
     for (ptrdiff_t b = 0; b < batch_size; b++)
     {

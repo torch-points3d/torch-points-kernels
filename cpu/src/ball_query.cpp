@@ -15,7 +15,7 @@ std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor support, at::Tensor quer
 
     at::Tensor out;
     at::Tensor out_dists;
-    std::vector<long> neighbors_indices(query.size(0), 0);
+    std::vector<int64_t> neighbors_indices(query.size(0), 0);
     std::vector<float> neighbors_dists(query.size(0), -1);
 
     auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
@@ -34,7 +34,7 @@ std::pair<at::Tensor, at::Tensor> ball_query(at::Tensor support, at::Tensor quer
                                                   neighbors_dists, radius, max_num, mode, sorted);
     });
     auto neighbors_dists_ptr = neighbors_dists.data();
-    long* neighbors_indices_ptr = neighbors_indices.data();
+    int64_t* neighbors_indices_ptr = neighbors_indices.data();
     if (mode == 0)
     {
         out =
@@ -73,7 +73,7 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
     at::Tensor idx;
 
     at::Tensor dist;
-    std::vector<long> neighbors_indices;
+    std::vector<int64_t> neighbors_indices;
     std::vector<float> neighbors_dists;
 
     auto options = torch::TensorOptions().dtype(torch::kLong).device(torch::kCPU);
@@ -91,10 +91,11 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
     query_batch = at::cat({at::zeros(1, query_batch.options()), query_batch.cumsum(0)}, 0);
     support_batch = degree(support_batch, batch_size);
     support_batch = at::cat({at::zeros(1, support_batch.options()), support_batch.cumsum(0)}, 0);
-    std::vector<long> query_batch_stl(query_batch.DATA_PTR<long>(),
-                                      query_batch.DATA_PTR<long>() + query_batch.numel());
-    std::vector<long> support_batch_stl(support_batch.DATA_PTR<long>(),
-                                        support_batch.DATA_PTR<long>() + support_batch.numel());
+    std::vector<int64_t> query_batch_stl(query_batch.DATA_PTR<int64_t>(),
+                                         query_batch.DATA_PTR<int64_t>() + query_batch.numel());
+    std::vector<int64_t> support_batch_stl(support_batch.DATA_PTR<int64_t>(),
+                                           support_batch.DATA_PTR<int64_t>() +
+                                               support_batch.numel());
 
     AT_DISPATCH_ALL_TYPES(query.scalar_type(), "batch_radius_search", [&] {
         std::vector<scalar_t> queries_stl(query.DATA_PTR<scalar_t>(),
@@ -107,7 +108,7 @@ std::pair<at::Tensor, at::Tensor> batch_ball_query(at::Tensor support, at::Tenso
             neighbors_dists, radius, max_num, mode, sorted);
     });
     auto neighbors_dists_ptr = neighbors_dists.data();
-    long* neighbors_indices_ptr = neighbors_indices.data();
+    int64_t* neighbors_indices_ptr = neighbors_indices.data();
 
     if (mode == 0)
     {

@@ -19,7 +19,7 @@ at::Tensor knn_interpolate(at::Tensor features, at::Tensor idx, at::Tensor weigh
         auto output_a = output.accessor<scalar_t, 3>();
         auto features_a = features.accessor<scalar_t, 3>();
         auto weight_a = weight.accessor<scalar_t, 3>();
-        auto idx_a = idx.accessor<long, 3>();
+        auto idx_a = idx.accessor<int64_t, 3>();
 
         auto batch_size = idx.size(0);
         for (auto b = 0; b < batch_size; b++)
@@ -51,7 +51,7 @@ at::Tensor knn_interpolate_grad(at::Tensor grad_out, at::Tensor idx, at::Tensor 
         auto output_a = output.accessor<scalar_t, 3>();
         auto grad_out_a = grad_out.accessor<scalar_t, 3>();
         auto weight_a = weight.accessor<scalar_t, 3>();
-        auto idx_a = idx.accessor<long, 3>();
+        auto idx_a = idx.accessor<int64_t, 3>();
 
         auto batch_size = idx.size(0);
         for (auto b = 0; b < batch_size; b++)
