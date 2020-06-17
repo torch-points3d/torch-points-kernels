@@ -64,7 +64,7 @@ def get_cmdclass():
     return {"build_ext": BuildExtension}
 
 
-requirements = ["torch>=1.1.0"]
+requirements = ["torch>=1.1.0", "numba"]
 
 url = "https://github.com/nicolas-chaulet/torch-points-kernels"
 __version__ = "0.6.4"
