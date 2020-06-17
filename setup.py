@@ -61,13 +61,17 @@ def get_ext_modules():
 
 
 def get_cmdclass():
-    return {"build_ext": BuildExtension}
+    return {
+        "build_ext": BuildExtension.with_options(
+            no_python_abi_suffix=True, use_ninja=False
+        )
+    }
 
 
 requirements = ["torch>=1.1.0", "numba"]
 
 url = "https://github.com/nicolas-chaulet/torch-points-kernels"
-__version__ = "0.6.4"
+__version__ = "0.6.5"
 setup(
     name="torch-points-kernels",
     version=__version__,

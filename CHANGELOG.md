@@ -1,4 +1,12 @@
-# UNRELEASED
+# 0.6.5
+
+## Additions
+- Clustering algorithm for [PointGroup](https://arxiv.org/pdf/2004.01658.pdf)
+
+## Change
+- Force no ninja for the compilation
+
+# 0.6.4
 
 ## Bug fix
 - CPU version works for MacOS
