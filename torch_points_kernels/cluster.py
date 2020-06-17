@@ -97,7 +97,7 @@ def region_grow(
         if len(label_clusters):
             remaped_clusters = []
             for cluster in label_clusters:
-                cluster = cluster.to(pos.device)
+                cluster = torch.tensor(cluster).to(pos.device)
                 remaped_clusters.append(local_ind[cluster])
             clusters[l.item()] = remaped_clusters
 

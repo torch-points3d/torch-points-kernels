@@ -6,7 +6,6 @@ from typing import Optional, Any, Tuple
 
 import torch_points_kernels.points_cpu as tpcpu
 from .knn import knn
-from .cluster import region_grow
 
 if torch.cuda.is_available():
     import torch_points_kernels.points_cuda as tpcuda
