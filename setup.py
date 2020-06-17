@@ -60,12 +60,13 @@ def get_ext_modules():
     return ext_modules
 
 
+class CustomBuildExtension(BuildExtension):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, no_python_abi_suffix=True, use_ninja=False, **kwargs)
+
+
 def get_cmdclass():
-    return {
-        "build_ext": BuildExtension.with_options(
-            no_python_abi_suffix=True, use_ninja=False
-        )
-    }
+    return {"build_ext": CustomBuildExtension}
 
 
 requirements = ["torch>=1.1.0", "numba"]
