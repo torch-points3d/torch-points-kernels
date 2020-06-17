@@ -37,7 +37,8 @@ def _grow_proximity_core(neighbours, min_cluster_size):
 
 
 def grow_proximity(pos, batch, nsample=16, radius=0.02, min_cluster_size=32):
-    """ Grow based on proximity only"""
+    """ Grow based on proximity only
+    Neighbour search is done on device while the cluster assignement is done on cpu"""
     assert pos.shape[0] == batch.shape[0]
     neighbours = (
         ball_query_partial_dense(radius, nsample, pos, pos, batch, batch)[0]
@@ -57,6 +58,18 @@ def region_grow(
 
     Parameters
     ----------
+    pos: torch.Tensor [N, 3]
+        Location of the points
+    labels: torch.Tensor [N,]
+        labels of each point
+    ignore_labels:
+        Labels that should be ignored, no region growing will be performed on those
+    nsample:
+        maximum number of neighbours to consider
+    radius:
+        radius for the neighbour search
+    min_cluster_size:
+        Number of points above which a cluster is considered valid
     """
     assert labels.dim() == 1
     assert pos.dim() == 2
@@ -68,6 +81,8 @@ def region_grow(
     for l in unique_labels:
         if l in ignore_labels:
             continue
+
+        # Build clusters for a given label (ignore other points)
         label_mask = labels == l
         local_ind = ind[label_mask]
         label_clusters = grow_proximity(
@@ -77,6 +92,8 @@ def region_grow(
             radius=radius,
             min_cluster_size=min_cluster_size,
         )
+
+        # Remap indices to original coordinates
         if len(label_clusters):
             remaped_clusters = []
             for cluster in label_clusters:
