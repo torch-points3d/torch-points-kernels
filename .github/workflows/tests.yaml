@@ -22,14 +22,14 @@ jobs:
         - name: Install dependencies
           run: |
               python -m pip install --upgrade pip
-              pip install numpy scikit-learn flake8 setuptools
+              pip install numpy scikit-learn flake8 setuptools numba
               
         - name: Install torch windows + linux
           if: ${{matrix.os != 'macos-latest'}}
           run: pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
         - name: Install torch macos
           if: ${{matrix.os == 'macos-latest'}}
-          run: pip install torch
+          run: pip install torch 
             
         - name: Build package
           run: |

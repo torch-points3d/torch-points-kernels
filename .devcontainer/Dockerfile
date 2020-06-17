@@ -29,5 +29,5 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install -U pip
-RUN pip3 install torch numpy scikit-learn flake8 setuptools
+RUN pip3 install torch numpy scikit-learn flake8 setuptools numba
 RUN pip3 install torch_cluster torch_sparse torch_scatter torch_geometric

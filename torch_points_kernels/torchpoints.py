@@ -30,7 +30,10 @@ def furthest_point_sample(xyz, npoint):
         (B, npoint) tensor containing the set
     """
     if npoint > xyz.shape[1]:
-        raise ValueError("caanot sample %i points from an input set of %i points" % (npoint, xyz.shape[1]))
+        raise ValueError(
+            "caanot sample %i points from an input set of %i points"
+            % (npoint, xyz.shape[1])
+        )
     if xyz.is_cuda:
         return tpcuda.furthest_point_sampling(xyz, npoint)
     else:
@@ -99,9 +102,13 @@ class ThreeInterpolate(Function):
         idx, weight, m = ctx.three_interpolate_for_backward
 
         if grad_out.is_cuda:
-            grad_features = tpcuda.three_interpolate_grad(grad_out.contiguous(), idx, weight, m)
+            grad_features = tpcuda.three_interpolate_grad(
+                grad_out.contiguous(), idx, weight, m
+            )
         else:
-            grad_features = tpcpu.knn_interpolate_grad(grad_out.contiguous(), idx, weight, m)
+            grad_features = tpcpu.knn_interpolate_grad(
+                grad_out.contiguous(), idx, weight, m
+            )
 
         return grad_features, None, None
 
@@ -143,17 +150,23 @@ def grouping_operation(features, idx):
     all_idx = idx.reshape(idx.shape[0], -1)
     all_idx = all_idx.unsqueeze(1).repeat(1, features.shape[1], 1)
     grouped_features = features.gather(2, all_idx)
-    return grouped_features.reshape(idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2])
+    return grouped_features.reshape(
+        idx.shape[0], features.shape[1], idx.shape[1], idx.shape[2]
+    )
 
 
-def ball_query_dense(radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None, sort=False):
+def ball_query_dense(
+    radius, nsample, xyz, new_xyz, batch_xyz=None, batch_new_xyz=None, sort=False
+):
     # type: (Any, float, int, torch.Tensor, torch.Tensor) -> torch.Tensor
     if new_xyz.is_cuda:
         if sort:
             raise NotImplementedError("CUDA version does not sort the neighbors")
         ind, dist = tpcuda.ball_query_dense(new_xyz, xyz, radius, nsample)
     else:
-        ind, dist = tpcpu.dense_ball_query(new_xyz, xyz, radius, nsample, mode=0, sorted=sort)
+        ind, dist = tpcpu.dense_ball_query(
+            new_xyz, xyz, radius, nsample, mode=0, sorted=sort
+        )
     return ind, dist
 
 
@@ -162,9 +175,13 @@ def ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y, sort=False
     if x.is_cuda:
         if sort:
             raise NotImplementedError("CUDA version does not sort the neighbors")
-        ind, dist = tpcuda.ball_query_partial_dense(x, y, batch_x, batch_y, radius, nsample)
+        ind, dist = tpcuda.ball_query_partial_dense(
+            x, y, batch_x, batch_y, radius, nsample
+        )
     else:
-        ind, dist = tpcpu.batch_ball_query(x, y, batch_x, batch_y, radius, nsample, mode=0, sorted=sort)
+        ind, dist = tpcpu.batch_ball_query(
+            x, y, batch_x, batch_y, radius, nsample, mode=0, sorted=sort
+        )
     return ind, dist
 
 
@@ -207,7 +224,9 @@ def ball_query(
         assert x.size(0) == batch_x.size(0)
         assert y.size(0) == batch_y.size(0)
         assert x.dim() == 2
-        return ball_query_partial_dense(radius, nsample, x, y, batch_x, batch_y, sort=sort)
+        return ball_query_partial_dense(
+            radius, nsample, x, y, batch_x, batch_y, sort=sort
+        )
 
     elif mode.lower() == "dense":
         if (batch_x is not None) or (batch_y is not None):
