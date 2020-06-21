@@ -25,6 +25,22 @@ python setup.py build_ext --inplace
 python -m unittest
 ```
 
+## Troubleshooting
+Ensure that at least PyTorch 1.4.0 is installed and verify that `cuda/bin` and `cuda/include` are in your `$PATH` and `$CPATH` respectively, e.g.:
+```
+$ python -c "import torch; print(torch.__version__)"
+>>> 1.4.0
+
+$ python -c "import torch; print(torch.__version__)"
+>>> 1.1.0
+
+$ echo $PATH
+>>> /usr/local/cuda/bin:...
+
+$ echo $CPATH
+>>> /usr/local/cuda/include:...
+```
+
 ## Projects using those kernels.
 
 [```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks)
