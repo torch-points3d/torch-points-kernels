@@ -2,6 +2,7 @@ import torch
 from .torchpoints import ball_query_partial_dense
 import numpy as np
 import numba
+from typing import List
 
 
 @numba.jit(nopython=True)
@@ -50,7 +51,7 @@ def grow_proximity(pos, batch, nsample=16, radius=0.02, min_cluster_size=32):
 
 def region_grow(
     pos, labels, batch, ignore_labels=[], nsample=16, radius=0.02, min_cluster_size=32
-):
+) -> List[torch.Tensor]:
     """ Region growing clustering algorithm proposed in
     PointGroup: Dual-Set Point Grouping for 3D Instance Segmentation
     https://arxiv.org/pdf/2004.01658.pdf
@@ -76,7 +77,7 @@ def region_grow(
     assert pos.shape[0] == labels.shape[0]
 
     unique_labels = torch.unique(labels)
-    clusters = {}
+    clusters = []
     ind = torch.arange(0, pos.shape[0])
     for l in unique_labels:
         if l in ignore_labels:
@@ -95,10 +96,8 @@ def region_grow(
 
         # Remap indices to original coordinates
         if len(label_clusters):
-            remaped_clusters = []
             for cluster in label_clusters:
                 cluster = torch.tensor(cluster).to(pos.device)
-                remaped_clusters.append(local_ind[cluster])
-            clusters[l.item()] = remaped_clusters
+                clusters.append(local_ind[cluster])
 
     return clusters

@@ -34,18 +34,16 @@ class TestGrow(unittest.TestCase):
         self.assertEqual(clusters, [[0, 1, 2], [4, 5, 6]])
 
     def test_region_grow(self):
-        clusters = region_grow(
+        cluster_idx = region_grow(
             self.pos, self.labels, self.batch, radius=2, min_cluster_size=1
         )
-        self.assertEqual(len(clusters[0]), 2)
-        self.assertEqual(len(clusters[1]), 3)
-        self.assertEqual(len(clusters[10]), 1)
-        torch.testing.assert_allclose(clusters[0][0], torch.tensor([0, 1]))
-        torch.testing.assert_allclose(clusters[0][1], torch.tensor([4]))
-        torch.testing.assert_allclose(clusters[1][0], torch.tensor([2]))
-        torch.testing.assert_allclose(clusters[1][1], torch.tensor([3]))
-        torch.testing.assert_allclose(clusters[1][2], torch.tensor([5, 6]))
-        torch.testing.assert_allclose(clusters[10][0], torch.tensor([7]))
+        self.assertEqual(len(cluster_idx), 6)
+        torch.testing.assert_allclose(cluster_idx[0], torch.tensor([0, 1]))
+        torch.testing.assert_allclose(cluster_idx[1], torch.tensor([4]))
+        torch.testing.assert_allclose(cluster_idx[2], torch.tensor([2]))
+        torch.testing.assert_allclose(cluster_idx[3], torch.tensor([3]))
+        torch.testing.assert_allclose(cluster_idx[4], torch.tensor([5, 6]))
+        torch.testing.assert_allclose(cluster_idx[5], torch.tensor([7]))
 
 
 if __name__ == "__main__":
