@@ -1,7 +1,7 @@
 from .torchpoints import *
 from .knn import knn
 from .cluster import region_grow
-import metrics
+from .metrics import instance_iou
 
 __all__ = [
     "ball_query",
@@ -11,5 +11,5 @@ __all__ = [
     "three_nn",
     "knn",
     "region_grow",
-    "metrics.instance_iou",
+    "instance_iou",
 ]
