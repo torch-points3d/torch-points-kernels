@@ -1,5 +1,6 @@
 #include "ball_query.h"
 #include "interpolate.h"
+#include "metrics.h"
 #include "sampling.h"
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
@@ -12,4 +13,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 
     m.def("ball_query_dense", &ball_query_dense);
     m.def("ball_query_partial_dense", &ball_query_partial_dense);
+
+    m.def("instance_iou_cuda", &instance_iou_cuda);
 }
