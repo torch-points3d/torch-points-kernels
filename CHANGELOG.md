@@ -2,6 +2,7 @@
 
 ## Additions
 - Clustering algorithm for [PointGroup](https://arxiv.org/pdf/2004.01658.pdf)
+- Instance IoU computation on CPU and GPU
 
 ## Change
 - Force no ninja for the compilation

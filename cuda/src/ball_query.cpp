@@ -19,26 +19,18 @@ std::pair<at::Tensor, at::Tensor> ball_query_dense(at::Tensor new_xyz, at::Tenso
     CHECK_IS_FLOAT(new_xyz);
     CHECK_IS_FLOAT(xyz);
 
-    if (new_xyz.type().is_cuda())
-    {
-        CHECK_CUDA(xyz);
-    }
+    CHECK_CUDA(xyz);
+    CHECK_CUDA(new_xyz);
 
     at::Tensor idx = torch::zeros({new_xyz.size(0), new_xyz.size(1), nsample},
                                   at::device(new_xyz.device()).dtype(at::ScalarType::Long));
     at::Tensor dist = torch::full({new_xyz.size(0), new_xyz.size(1), nsample}, -1,
                                   at::device(new_xyz.device()).dtype(at::ScalarType::Float));
 
-    if (new_xyz.type().is_cuda())
-    {
-        query_ball_point_kernel_dense_wrapper(
-            xyz.size(0), xyz.size(1), new_xyz.size(1), radius, nsample, new_xyz.DATA_PTR<float>(),
-            xyz.DATA_PTR<float>(), idx.DATA_PTR<long>(), dist.DATA_PTR<float>());
-    }
-    else
-    {
-        TORCH_CHECK(false, "CPU not supported");
-    }
+    query_ball_point_kernel_dense_wrapper(xyz.size(0), xyz.size(1), new_xyz.size(1), radius,
+                                          nsample, new_xyz.DATA_PTR<float>(), xyz.DATA_PTR<float>(),
+                                          idx.DATA_PTR<long>(), dist.DATA_PTR<float>());
+
     return std::make_pair(idx, dist);
 }
 
@@ -57,14 +49,10 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x, at::Ten
     CHECK_CONTIGUOUS(y);
     CHECK_IS_FLOAT(x);
     CHECK_IS_FLOAT(y);
-
-    if (x.type().is_cuda())
-    {
-        CHECK_CUDA(x);
-        CHECK_CUDA(y);
-        CHECK_CUDA(batch_x);
-        CHECK_CUDA(batch_y);
-    }
+    CHECK_CUDA(x);
+    CHECK_CUDA(y);
+    CHECK_CUDA(batch_x);
+    CHECK_CUDA(batch_y);
 
     at::Tensor idx =
         torch::full({y.size(0), nsample}, -1, at::device(y.device()).dtype(at::ScalarType::Long));
@@ -83,17 +71,10 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x, at::Ten
     batch_y = degree(batch_y, batch_size);
     batch_y = at::cat({at::zeros(1, batch_y.options()), batch_y.cumsum(0)}, 0);
 
-    if (x.type().is_cuda())
-    {
-        query_ball_point_kernel_partial_wrapper(batch_size, x.size(0), y.size(0), radius, nsample,
-                                                x.DATA_PTR<float>(), y.DATA_PTR<float>(),
-                                                batch_x.DATA_PTR<long>(), batch_y.DATA_PTR<long>(),
-                                                idx.DATA_PTR<long>(), dist.DATA_PTR<float>());
-    }
-    else
-    {
-        TORCH_CHECK(false, "CPU not supported");
-    }
+    query_ball_point_kernel_partial_wrapper(batch_size, x.size(0), y.size(0), radius, nsample,
+                                            x.DATA_PTR<float>(), y.DATA_PTR<float>(),
+                                            batch_x.DATA_PTR<long>(), batch_y.DATA_PTR<long>(),
+                                            idx.DATA_PTR<long>(), dist.DATA_PTR<float>());
 
     return std::make_pair(idx, dist);
 }

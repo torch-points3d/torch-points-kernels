@@ -5,7 +5,7 @@
 #define CHECK_CUDA(x)                                                                              \
     do                                                                                             \
     {                                                                                              \
-        TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor");                              \
+        TORCH_CHECK(x.is_cuda(), #x " must be a CUDA tensor");                                     \
     } while (0)
 
 #define CHECK_CONTIGUOUS(x)                                                                        \
