@@ -7,10 +7,10 @@
 #define THREADS 512
 
 __global__ void instance_iou_cuda_kernel(
-    long total_gt_instances, const long* __restrict__ nInstance, int nProposal,
-    const long* __restrict__ proposals_idx, const long* __restrict__ proposals_offset,
-    const long* __restrict__ instance_labels, const long* __restrict__ offset_num_gt_instances,
-    const long* __restrict__ batch, const long* __restrict__ instance_pointnum,
+    int64_t total_gt_instances, const int64_t* __restrict__ nInstance, int nProposal,
+    const int64_t* __restrict__ proposals_idx, const int64_t* __restrict__ proposals_offset,
+    const int64_t* __restrict__ instance_labels, const int64_t* __restrict__ offset_num_gt_instances,
+    const int64_t* __restrict__ batch, const int64_t* __restrict__ instance_pointnum,
     float* proposals_iou)
 {
     for (int proposal_id = blockIdx.x; proposal_id < nProposal; proposal_id += gridDim.x)
@@ -44,18 +44,18 @@ __global__ void instance_iou_cuda_kernel(
 
 // input: proposals_idx (sumNPoint), int
 // input: proposals_offset (nProposal + 1), int
-// input: instance_labels (N), long, 0~total_nInst-1, -100
+// input: instance_labels (N), int64_t, 0~total_nInst-1, -100
 // input: instance_pointnum (total_nInst), int
 // output: proposals_iou (nProposal, total_nInst), float
-void instance_iou_kernel_wrapper(long total_gt_instances, long max_gt_instances,
-                                 const long* nInstance, int nProposal, const long* proposals_idx,
-                                 const long* proposals_offset, const long* instance_labels,
-                                 const long* offset_num_gt_instances, const long* batch,
-                                 const long* instance_pointnum, float* proposals_iou)
+void instance_iou_kernel_wrapper(int64_t total_gt_instances, int64_t max_gt_instances,
+                                 const int64_t* nInstance, int nProposal, const int64_t* proposals_idx,
+                                 const int64_t* proposals_offset, const int64_t* instance_labels,
+                                 const int64_t* offset_num_gt_instances, const int64_t* batch,
+                                 const int64_t* instance_pointnum, float* proposals_iou)
 {
     auto stream = at::cuda::getCurrentCUDAStream();
     instance_iou_cuda_kernel<<<std::min(nProposal, THREADS * THREADS),
-                               std::min(max_gt_instances, (long)THREADS), 0, stream>>>(
+                               std::min(max_gt_instances, (int64_t)THREADS), 0, stream>>>(
         total_gt_instances, nInstance, nProposal, proposals_idx, proposals_offset, instance_labels,
         offset_num_gt_instances, batch, instance_pointnum, proposals_iou);
 }
