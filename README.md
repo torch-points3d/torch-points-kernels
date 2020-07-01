@@ -26,6 +26,8 @@ python -m unittest
 ```
 
 ## Troubleshooting
+
+### Compilation issues
 Ensure that at least PyTorch 1.4.0 is installed and verify that `cuda/bin` and `cuda/include` are in your `$PATH` and `$CPATH` respectively, e.g.:
 ```
 $ python -c "import torch; print(torch.__version__)"
@@ -40,6 +42,16 @@ $ echo $PATH
 $ echo $CPATH
 >>> /usr/local/cuda/include:...
 ```
+
+
+### CUDA kernel failed : no kernel image is available for execution on the device
+
+This can happen when trying to run the code on a different GPU than the one used to compile the `torch-points-kernels` library. Uninstall `torch-points-kernels`, clear cache, and reinstall after setting the `TORCH_CUDA_ARCH_LIST` environment variable. For example, for compiling with a Tesla T4 (Turing 7.5) and running the code on a Tesla V100 (Volta 7.0) use:
+```
+export TORCH_CUDA_ARCH_LIST="7.0;7.5"
+```
+See [this useful chart](http://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/) for more architecture compatibility.
+
 
 ## Projects using those kernels.
 
