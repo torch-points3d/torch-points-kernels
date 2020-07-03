@@ -1,4 +1,6 @@
 # 0.6.6
+## Additions
+- Windows support
 
 ## Bug fix
 - Fixed bug in region growing related to batching
