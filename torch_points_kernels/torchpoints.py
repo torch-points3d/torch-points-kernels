@@ -235,3 +235,31 @@ def ball_query(
         return ball_query_dense(radius, nsample, x, y, sort=sort)
     else:
         raise Exception("unrecognized mode {}".format(mode))
+
+
+class ChamferFunction(Function):
+    @staticmethod
+    def forward(ctx, xyz1, xyz2):
+        dist1, dist2, idx1, idx2 = tpcuda.chamfer_dist(xyz1, xyz2)
+        print(dir(tpcuda))
+        ctx.save_for_backward(xyz1, xyz2, idx1, idx2)
+
+        return dist1, dist2
+
+    @staticmethod
+    def backward(ctx, grad_dist1, grad_dist2):
+        xyz1, xyz2, idx1, idx2 = ctx.saved_tensors
+        grad_xyz1, grad_xyz2 = tpcuda.chamfer_dist_grad(xyz1, xyz2, idx1, idx2, grad_dist1, grad_dist2)
+        return grad_xyz1, grad_xyz2
+
+
+def chamfer_dist(self, xyz1, xyz2, ignore_zeros=False):
+    batch_size = xyz1.size(0)
+    if batch_size == 1 and ignore_zeros:
+        non_zeros1 = torch.sum(xyz1, dim=2).ne(0)
+        non_zeros2 = torch.sum(xyz2, dim=2).ne(0)
+        xyz1 = xyz1[non_zeros1].unsqueeze(dim=0)
+        xyz2 = xyz2[non_zeros2].unsqueeze(dim=0)
+
+    dist1, dist2 = ChamferFunction.apply(xyz1, xyz2)
+    return torch.mean(dist1) + torch.mean(dist2)

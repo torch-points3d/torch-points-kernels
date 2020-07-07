@@ -12,4 +12,5 @@ __all__ = [
     "knn",
     "region_grow",
     "instance_iou",
+    "chamfer_dist"
 ]
