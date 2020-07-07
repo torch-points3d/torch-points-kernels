@@ -241,7 +241,6 @@ class ChamferFunction(Function):
     @staticmethod
     def forward(ctx, xyz1, xyz2):
         dist1, dist2, idx1, idx2 = tpcuda.chamfer_dist(xyz1, xyz2)
-        print(dir(tpcuda))
         ctx.save_for_backward(xyz1, xyz2, idx1, idx2)
 
         return dist1, dist2
