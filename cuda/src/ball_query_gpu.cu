@@ -59,7 +59,6 @@ __global__ void query_ball_point_kernel_partial_dense(
     // taken from
     // https://github.com/rusty1s/pytorch_cluster/blob/master/cuda/radius_kernel.cu
     const ptrdiff_t batch_idx = blockIdx.x;
-    const ptrdiff_t idx = threadIdx.x;
 
     const ptrdiff_t start_idx_x = batch_x[batch_idx];
     const ptrdiff_t end_idx_x = batch_x[batch_idx + 1];
@@ -68,10 +67,10 @@ __global__ void query_ball_point_kernel_partial_dense(
     const ptrdiff_t end_idx_y = batch_y[batch_idx + 1];
     float radius2 = radius * radius;
 
-    for (ptrdiff_t n_x = start_idx_x + idx; n_x < end_idx_x; n_x += TOTAL_THREADS_SPARSE)
+    for (ptrdiff_t n_y = start_idx_y +  threadIdx.x; n_y < end_idx_y; n_y += blockDim.x)
     {
         int64_t count = 0;
-        for (ptrdiff_t n_y = start_idx_y; n_y < end_idx_y; n_y++)
+        for (ptrdiff_t n_x = start_idx_x; n_x < end_idx_x; n_x++)
         {
             float dist = 0;
             for (ptrdiff_t d = 0; d < 3; d++)

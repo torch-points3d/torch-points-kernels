@@ -86,9 +86,19 @@ def region_grow(
         # Build clusters for a given label (ignore other points)
         label_mask = labels == l
         local_ind = ind[label_mask]
+
+        # Remap batch to a continuous sequence
+        label_batch = batch[label_mask]
+        unique_in_batch = torch.unique(label_batch)
+        remaped_batch = torch.empty_like(label_batch)
+        for new, old in enumerate(unique_in_batch):
+            mask = label_batch == old
+            remaped_batch[mask] = new
+
+        # Cluster
         label_clusters = grow_proximity(
             pos[label_mask, :],
-            batch[label_mask],
+            remaped_batch,
             nsample=nsample,
             radius=radius,
             min_cluster_size=min_cluster_size,

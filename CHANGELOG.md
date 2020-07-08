@@ -1,3 +1,16 @@
+# 0.6.6
+## Additions
+- Windows support
+
+
+## Change
+- Develop with python 3.7
+
+## Bug fix
+- Fixed bug in region growing related to batching
+- Ball query for partial dense data on GPU was returning only the first point. Fixed now
+
+
 # 0.6.5
 
 ## Additions
