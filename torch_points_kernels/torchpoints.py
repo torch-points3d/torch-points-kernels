@@ -252,7 +252,24 @@ class ChamferFunction(Function):
         return grad_xyz1, grad_xyz2
 
 
-def chamfer_dist(self, xyz1, xyz2, ignore_zeros=False):
+def chamfer_dist(xyz1, xyz2, ignore_zeros=False):
+    r"""
+    Calcuates the distance between B pairs of point clouds
+
+    Parameters
+    ----------
+    xyz1 : torch.Tensor (dtype=torch.float32)
+        (B, n1, 3) B point clouds containing n1 points
+    xyz2 : torch.Tensor (dtype=torch.float32)
+        (B, n2, 3) B point clouds containing n2 points
+    ignore_zeros : bool
+        ignore the point whose coordinate is (0, 0, 0) or not
+
+    Returns
+    -------
+    dist: torch.Tensor
+        (B, ): the distances between B pairs of point clouds
+    """
     batch_size = xyz1.size(0)
     if batch_size == 1 and ignore_zeros:
         non_zeros1 = torch.sum(xyz1, dim=2).ne(0)
