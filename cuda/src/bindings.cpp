@@ -1,5 +1,6 @@
 #include "ball_query.h"
 #include "chamfer_dist.h"
+#include "cubic_feature_sampling.h"
 #include "interpolate.h"
 #include "metrics.h"
 #include "sampling.h"
@@ -19,4 +20,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 
     m.def("chamfer_dist", &chamfer_dist);
     m.def("chamfer_dist_grad", &chamfer_dist_grad);
+
+    m.def("cubic_feature_sampling", &cubic_feature_sampling);
+    m.def("cubic_feature_sampling_grad", &cubic_feature_sampling_grad);
 }
