@@ -1,4 +1,5 @@
 #include "ball_query.h"
+#include "chamfer_dist.h"
 #include "interpolate.h"
 #include "metrics.h"
 #include "sampling.h"
@@ -15,4 +16,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     m.def("ball_query_partial_dense", &ball_query_partial_dense);
 
     m.def("instance_iou_cuda", &instance_iou_cuda);
+
+    m.def("chamfer_dist", &chamfer_dist);
+    m.def("chamfer_dist_grad", &chamfer_dist_grad);
 }
