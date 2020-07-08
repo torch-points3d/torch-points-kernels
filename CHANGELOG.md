@@ -1,4 +1,4 @@
-# 0.6.6
+# 0.6.7
 ## Additions
 - Chamfer distance introduced in https://arxiv.org/pdf/1612.00603 for dense batches
 
