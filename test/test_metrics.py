@@ -24,7 +24,9 @@ class TestInstanceIou(unittest.TestCase):
             proposed_instances = [c.cuda() for c in proposed_instances]
             gt_instances = gt_instances.cuda()
         ious = instance_iou(proposed_instances, gt_instances)
-        torch.testing.assert_allclose(ious.cpu(), torch.tensor([[1, 0, 0], [0, 2 / 3.0, 0], [0, 1.0 / 4.0, 1.0 / 2.0]]))
+        torch.testing.assert_allclose(
+            ious.cpu(), torch.tensor([[1, 0, 0], [0, 2 / 3.0, 0], [0, 1.0 / 4.0, 1.0 / 2.0]]),
+        )
 
     def test_batch(self, cuda=False):
         gt_instances = torch.tensor([1, 2, 1, 2, 2, 3, 0])

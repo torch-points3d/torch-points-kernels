@@ -12,16 +12,7 @@ from torch_points_kernels.cluster import grow_proximity, region_grow
 class TestGrow(unittest.TestCase):
     def setUp(self):
         self.pos = torch.tensor(
-            [
-                [0, 0, 0],
-                [1, 0, 0],
-                [2, 0, 0],
-                [10, 0, 0],
-                [0, 0, 0],
-                [1, 0, 0],
-                [2, 0, 0],
-                [10, 0, 0],
-            ]
+            [[0, 0, 0], [1, 0, 0], [2, 0, 0], [10, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0], [10, 0, 0],]
         )
         self.batch = torch.tensor([0, 0, 0, 0, 1, 1, 1, 1])
         self.labels = torch.tensor([0, 0, 1, 1, 0, 1, 1, 10])
@@ -34,9 +25,7 @@ class TestGrow(unittest.TestCase):
         self.assertEqual(clusters, [[0, 1, 2], [4, 5, 6]])
 
     def test_region_grow(self):
-        cluster_idx = region_grow(
-            self.pos, self.labels, self.batch, radius=2, min_cluster_size=1
-        )
+        cluster_idx = region_grow(self.pos, self.labels, self.batch, radius=2, min_cluster_size=1)
         self.assertEqual(len(cluster_idx), 6)
         torch.testing.assert_allclose(cluster_idx[0], torch.tensor([0, 1]))
         torch.testing.assert_allclose(cluster_idx[1], torch.tensor([4]))

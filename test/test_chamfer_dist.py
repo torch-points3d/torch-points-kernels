@@ -26,22 +26,14 @@ class TestChamferDistance(unittest.TestCase):
 
     @run_if_cuda
     def test_chamfer_dist(self):
-        xyz1 = torch.from_numpy(np.array([[
-            [0, 0, 0],
-            [1, 1, 1],
-            [2, 0, 1]
-        ]])).float()
+        xyz1 = torch.from_numpy(np.array([[[0, 0, 0], [1, 1, 1], [2, 0, 1]]])).float()
         xyz2 = torch.from_numpy(np.array([[[1, 0, 0], [1, 2, 1]]])).float()
         dist = chamfer_dist(xyz1.cuda(), xyz2.cuda())
         self.assertAlmostEqual(dist.item(), 2.333333, places=5)
 
     @run_if_cuda
     def test_chamfer_dist_ignore_zeros(self):
-        xyz1 = torch.from_numpy(np.array([[
-            [0, 0, 0],
-            [1, 1, 1],
-            [2, 0, 1]
-        ]])).float()
+        xyz1 = torch.from_numpy(np.array([[[0, 0, 0], [1, 1, 1], [2, 0, 1]]])).float()
         xyz2 = torch.from_numpy(np.array([[[1, 0, 0], [1, 2, 1]]])).float()
         dist = chamfer_dist(xyz1.cuda(), xyz2.cuda(), True)
         self.assertAlmostEqual(dist.item(), 3.0, places=5)
