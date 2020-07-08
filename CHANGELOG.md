@@ -1,5 +1,9 @@
 # 0.6.6
 ## Additions
+- Chamfer distance introduced in https://arxiv.org/pdf/1612.00603 for dense batches
+
+# 0.6.6
+## Additions
 - Windows support
 
 
