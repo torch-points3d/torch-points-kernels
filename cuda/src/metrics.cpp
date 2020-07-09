@@ -3,8 +3,9 @@
 #include "utils.h"
 
 void instance_iou_kernel_wrapper(int64_t total_gt_instances, int64_t max_gt_instances,
-                                 const int64_t* nInstance, int nProposal, const int64_t* proposals_idx,
-                                 const int64_t* proposals_offset, const int64_t* instance_labels,
+                                 const int64_t* nInstance, int nProposal,
+                                 const int64_t* proposals_idx, const int64_t* proposals_offset,
+                                 const int64_t* instance_labels,
                                  const int64_t* offset_num_gt_instances, const int64_t* batch,
                                  const int64_t* instance_pointnum, float* proposals_iou);
 
@@ -41,9 +42,10 @@ at::Tensor instance_iou_cuda(at::Tensor instance_idx, at::Tensor instance_offset
         at::cat({at::zeros(1, num_gt_instances.options()), num_gt_instances.cumsum(0)}, 0);
     instance_iou_kernel_wrapper(
         total_gt_instances[0], max_gt_instances[0], num_gt_instances.DATA_PTR<int64_t>(),
-        num_proposed_instances, instance_idx.DATA_PTR<int64_t>(), instance_offsets.DATA_PTR<int64_t>(),
-        gt_instances.DATA_PTR<int64_t>(), offset_num_gt_instances.DATA_PTR<int64_t>(),
-        batch.DATA_PTR<int64_t>(), gt_instance_sizes.DATA_PTR<int64_t>(), output.DATA_PTR<float>());
+        num_proposed_instances, instance_idx.DATA_PTR<int64_t>(),
+        instance_offsets.DATA_PTR<int64_t>(), gt_instances.DATA_PTR<int64_t>(),
+        offset_num_gt_instances.DATA_PTR<int64_t>(), batch.DATA_PTR<int64_t>(),
+        gt_instance_sizes.DATA_PTR<int64_t>(), output.DATA_PTR<float>());
 
     return output;
 }
