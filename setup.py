@@ -28,9 +28,7 @@ def get_ext_modules():
         extra_compile_args += ["-DVERSION_GE_1_3"]
 
     ext_src_root = "cuda"
-    ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob(
-        "{}/src/*.cu".format(ext_src_root)
-    )
+    ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob("{}/src/*.cu".format(ext_src_root))
 
     ext_modules = []
     if CUDA_HOME:
@@ -39,10 +37,7 @@ def get_ext_modules():
                 name="torch_points_kernels.points_cuda",
                 sources=ext_sources,
                 include_dirs=["{}/include".format(ext_src_root)],
-                extra_compile_args={
-                    "cxx": extra_compile_args,
-                    "nvcc": extra_compile_args,
-                },
+                extra_compile_args={"cxx": extra_compile_args, "nvcc": extra_compile_args,},
             )
         )
 
@@ -86,8 +81,5 @@ setup(
     cmdclass=get_cmdclass(),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-    ],
+    classifiers=["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License",],
 )

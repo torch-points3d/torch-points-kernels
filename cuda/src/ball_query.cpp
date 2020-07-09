@@ -6,10 +6,11 @@ void query_ball_point_kernel_dense_wrapper(int b, int n, int m, float radius, in
                                            const float* new_xyz, const float* xyz, int64_t* idx,
                                            float* dist_out);
 
-void query_ball_point_kernel_partial_wrapper(int64_t batch_size, int size_x, int size_y, float radius,
-                                             int nsample, const float* x, const float* y,
-                                             const int64_t* batch_x, const int64_t* batch_y,
-                                             int64_t* idx_out, float* dist_out);
+void query_ball_point_kernel_partial_wrapper(int64_t batch_size, int size_x, int size_y,
+                                             float radius, int nsample, const float* x,
+                                             const float* y, const int64_t* batch_x,
+                                             const int64_t* batch_y, int64_t* idx_out,
+                                             float* dist_out);
 
 std::pair<at::Tensor, at::Tensor> ball_query_dense(at::Tensor new_xyz, at::Tensor xyz,
                                                    const float radius, const int nsample)
@@ -71,10 +72,10 @@ std::pair<at::Tensor, at::Tensor> ball_query_partial_dense(at::Tensor x, at::Ten
     batch_y = degree(batch_y, batch_size);
     batch_y = at::cat({at::zeros(1, batch_y.options()), batch_y.cumsum(0)}, 0);
 
-    query_ball_point_kernel_partial_wrapper(batch_size, x.size(0), y.size(0), radius, nsample,
-                                            x.DATA_PTR<float>(), y.DATA_PTR<float>(),
-                                            batch_x.DATA_PTR<int64_t>(), batch_y.DATA_PTR<int64_t>(),
-                                            idx.DATA_PTR<int64_t>(), dist.DATA_PTR<float>());
+    query_ball_point_kernel_partial_wrapper(
+        batch_size, x.size(0), y.size(0), radius, nsample, x.DATA_PTR<float>(), y.DATA_PTR<float>(),
+        batch_x.DATA_PTR<int64_t>(), batch_y.DATA_PTR<int64_t>(), idx.DATA_PTR<int64_t>(),
+        dist.DATA_PTR<float>());
 
     return std::make_pair(idx, dist);
 }

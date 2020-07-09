@@ -37,7 +37,9 @@ class TestGroup(unittest.TestCase):
         npt.assert_array_equal(expected, cpu_output)
 
         if torch.cuda.is_available():
-            npt.assert_array_equal(grouping_operation(features.cuda(), idx.cuda()).detach().cpu().numpy(), expected)
+            npt.assert_array_equal(
+                grouping_operation(features.cuda(), idx.cuda()).detach().cpu().numpy(), expected,
+            )
 
 
 if __name__ == "__main__":
