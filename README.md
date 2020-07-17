@@ -43,6 +43,14 @@ $ echo $CPATH
 >>> /usr/local/cuda/include:...
 ```
 
+On the compilation, if you have this error:
+```error: cannot call member function 'void std::basic_string<_CharT, _Traits, _Alloc>::_Rep::_M_set_sharable()```
+it means that your nvcc version is too old. The version must be at least 10.1.168.
+To check the version:
+```
+nvcc --version
+>>> V10.1.168
+```
 
 ### CUDA kernel failed : no kernel image is available for execution on the device
 
