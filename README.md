@@ -41,6 +41,34 @@ $ echo $CPATH
 >>> /usr/local/cuda/include:...
 ```
 
+On the compilation, if you have this error:
+```error: cannot call member function 'void std::basic_string<_CharT, _Traits, _Alloc>::_Rep::_M_set_sharable()```
+it means that your nvcc version is too old. The version must be at least 10.1.168.
+To check the version:
+```
+nvcc --version
+>>> V10.1.168
+```
+
+### Windows compilation
+On Windows you may have this error when compiling:
+```
+error: member "torch::jit::detail::ModulePolicy::all_slots" may not be initialized
+error: member "torch::jit::detail::ParameterPolicy::all_slots" may not be initialized
+error: member "torch::jit::detail::BufferPolicy::all_slots" may not be initialized
+error: member "torch::jit::detail::AttributePolicy::all_slots" may not be initialized
+```
+This requires you to edit some of your pytorch header files, use [this script](https://github.com/rusty1s/pytorch_scatter/blob/master/script/torch.sh) as a guide.
+
+### CUDA kernel failed : no kernel image is available for execution on the device
+
+This can happen when trying to run the code on a different GPU than the one used to compile the `torch-points-kernels` library. Uninstall `torch-points-kernels`, clear cache, and reinstall after setting the `TORCH_CUDA_ARCH_LIST` environment variable. For example, for compiling with a Tesla T4 (Turing 7.5) and running the code on a Tesla V100 (Volta 7.0) use:
+```
+export TORCH_CUDA_ARCH_LIST="7.0;7.5"
+```
+See [this useful chart](http://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/) for more architecture compatibility.
+
+
 ## Projects using those kernels.
 
 [```Pytorch Point Cloud Benchmark```](https://github.com/nicolas-chaulet/deeppointcloud-benchmarks)
