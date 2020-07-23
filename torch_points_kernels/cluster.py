@@ -41,11 +41,7 @@ def grow_proximity(pos, batch, nsample=16, radius=0.02, min_cluster_size=32):
     """ Grow based on proximity only
     Neighbour search is done on device while the cluster assignement is done on cpu"""
     assert pos.shape[0] == batch.shape[0]
-    neighbours = (
-        ball_query_partial_dense(radius, nsample, pos, pos, batch, batch)[0]
-        .cpu()
-        .numpy()
-    )
+    neighbours = ball_query_partial_dense(radius, nsample, pos, pos, batch, batch)[0].cpu().numpy()
     return _grow_proximity_core(neighbours, min_cluster_size)
 
 
@@ -86,12 +82,18 @@ def region_grow(
         # Build clusters for a given label (ignore other points)
         label_mask = labels == l
         local_ind = ind[label_mask]
+
+        # Remap batch to a continuous sequence
+        label_batch = batch[label_mask]
+        unique_in_batch = torch.unique(label_batch)
+        remaped_batch = torch.empty_like(label_batch)
+        for new, old in enumerate(unique_in_batch):
+            mask = label_batch == old
+            remaped_batch[mask] = new
+
+        # Cluster
         label_clusters = grow_proximity(
-            pos[label_mask, :],
-            batch[label_mask],
-            nsample=nsample,
-            radius=radius,
-            min_cluster_size=min_cluster_size,
+            pos[label_mask, :], remaped_batch, nsample=nsample, radius=radius, min_cluster_size=min_cluster_size,
         )
 
         # Remap indices to original coordinates

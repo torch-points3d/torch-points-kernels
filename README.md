@@ -26,6 +26,8 @@ python -m unittest
 ```
 
 ## Troubleshooting
+
+### Compilation issues
 Ensure that at least PyTorch 1.4.0 is installed and verify that `cuda/bin` and `cuda/include` are in your `$PATH` and `$CPATH` respectively, e.g.:
 ```
 $ python -c "import torch; print(torch.__version__)"
@@ -78,3 +80,5 @@ See [this useful chart](http://arnon.dk/matching-sm-architectures-arch-and-genco
 * [```Pointnet2_Tensorflow```](https://github.com/charlesq34/pointnet2) by [Charles R. Qi](https://github.com/charlesq34)
 
 * [```Pointnet2_PyTorch```](https://github.com/erikwijmans/Pointnet2_PyTorch) by [Erik Wijmans](https://github.com/erikwijmans)
+
+* [```GRNet```](https://github.com/hzxie/GRNet) by [Haozhe Xie](https://github.com/hzxie)
