@@ -1,3 +1,8 @@
+# 0.6.8
+## Bug fix
+- Comilation with older GPU architecture
+
+
 # 0.6.7
 ## Additions
 - Chamfer distance introduced in https://arxiv.org/pdf/1612.00603 for dense batches
