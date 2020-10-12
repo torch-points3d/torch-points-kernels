@@ -33,9 +33,6 @@ Ensure that at least PyTorch 1.4.0 is installed and verify that `cuda/bin` and `
 $ python -c "import torch; print(torch.__version__)"
 >>> 1.4.0
 
-$ python -c "import torch; print(torch.__version__)"
->>> 1.1.0
-
 $ echo $PATH
 >>> /usr/local/cuda/bin:...
 
