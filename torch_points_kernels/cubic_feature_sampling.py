@@ -55,6 +55,9 @@ def cubic_feature_sampling(ptcloud, cubic_features, neighborhood_size=1):
     dist: torch.Tensor
         (B, n_pts, n_vertices, c), where n_vertices = (neighborhood_size * 2)^3
     """
+    if len(ptcloud.shape) != 3 or ptcloud.shape[2] != 3:
+        raise ValueError('The input point cloud should be of size (B, n_pts, 3).')
+
     h_scale = cubic_features.size(2) / 2
     ptcloud = ptcloud * h_scale + h_scale
     return CubicFeatureSamplingFunction.apply(
