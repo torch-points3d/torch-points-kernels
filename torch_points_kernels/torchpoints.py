@@ -281,3 +281,4 @@ def chamfer_dist(xyz1, xyz2, ignore_zeros=False):
 
     dist1, dist2 = ChamferFunction.apply(xyz1, xyz2)
     return torch.mean(dist1) + torch.mean(dist2)
+
