@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <torch/extension.h>
 
+#include "cuda_utils.h"
+
 #define CUDA_NUM_THREADS 512
 
 // Computer the number of threads needed in GPU

@@ -12,7 +12,7 @@ from . import run_if_cuda
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
-from torch_points_kernels import CubicFeatureSamplingFunction, cubic_feature_sampling
+from torch_points_kernels.cubic_feature_sampling import CubicFeatureSamplingFunction, cubic_feature_sampling
 
 
 class TestCubicFeatureSampling(unittest.TestCase):
