@@ -12,7 +12,7 @@ from . import run_if_cuda
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
-from torch_points_kernels import ChamferFunction, chamfer_dist
+from torch_points_kernels.chamfer_dist import ChamferFunction, chamfer_dist
 
 
 class TestChamferDistance(unittest.TestCase):
