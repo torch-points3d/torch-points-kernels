@@ -13,7 +13,11 @@ class TestGroup(unittest.TestCase):
         features = torch.tensor(
             [
                 [[0, 10, 0], [1, 11, 0], [2, 12, 0]],
-                [[100, 110, 120], [101, 111, 121], [102, 112, 122],],  # x-coordinates  # y-coordinates  # z-coordinates
+                [
+                    [100, 110, 120],
+                    [101, 111, 121],
+                    [102, 112, 122],
+                ],  # x-coordinates  # y-coordinates  # z-coordinates
             ]
         ).type(torch.float)
         idx = torch.tensor([[[1, 0], [0, 0]], [[0, 1], [1, 2]]]).type(torch.long)
@@ -38,7 +42,8 @@ class TestGroup(unittest.TestCase):
 
         if torch.cuda.is_available():
             npt.assert_array_equal(
-                grouping_operation(features.cuda(), idx.cuda()).detach().cpu().numpy(), expected,
+                grouping_operation(features.cuda(), idx.cuda()).detach().cpu().numpy(),
+                expected,
             )
 
 

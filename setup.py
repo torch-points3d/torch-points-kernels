@@ -37,7 +37,10 @@ def get_ext_modules():
                 name="torch_points_kernels.points_cuda",
                 sources=ext_sources,
                 include_dirs=["{}/include".format(ext_src_root)],
-                extra_compile_args={"cxx": extra_compile_args, "nvcc": extra_compile_args,},
+                extra_compile_args={
+                    "cxx": extra_compile_args,
+                    "nvcc": extra_compile_args,
+                },
             )
         )
 
@@ -49,7 +52,9 @@ def get_ext_modules():
             name="torch_points_kernels.points_cpu",
             sources=cpu_ext_sources,
             include_dirs=["{}/include".format(cpu_ext_src_root)],
-            extra_compile_args={"cxx": extra_compile_args,},
+            extra_compile_args={
+                "cxx": extra_compile_args,
+            },
         )
     )
     return ext_modules
@@ -81,5 +86,8 @@ setup(
     cmdclass=get_cmdclass(),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    classifiers=["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License",],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+    ],
 )
