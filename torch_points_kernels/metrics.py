@@ -9,7 +9,12 @@ if torch.cuda.is_available():
 
 @numba.jit(nopython=True, parallel=True)
 def _instance_iou_cpu(
-    instance_idx, instance_offsets, gt_instances, gt_instance_sizes, num_gt_instances: np.array, batch: np.array,
+    instance_idx,
+    instance_offsets,
+    gt_instances,
+    gt_instance_sizes,
+    num_gt_instances: np.array,
+    batch: np.array,
 ):
     num_proposed_instances = len(instance_offsets) - 1
     iou = np.zeros((num_proposed_instances, num_gt_instances.sum()))
@@ -31,9 +36,11 @@ def _instance_iou_cpu(
 
 
 def instance_iou(
-    instance_idx: List[torch.Tensor], gt_instances: torch.Tensor, batch: Optional[torch.Tensor] = None,
+    instance_idx: List[torch.Tensor],
+    gt_instances: torch.Tensor,
+    batch: Optional[torch.Tensor] = None,
 ):
-    """ Computes the IoU between each proposed instance in instance_idx and ground truth instances. Returns a
+    """Computes the IoU between each proposed instance in instance_idx and ground truth instances. Returns a
     tensor of shape [instance_idx.shape[0], num_instances] that contains the iou between the proposed instances and all gt instances
     Instance label 0 is reserved for non instance points
 

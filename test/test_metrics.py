@@ -25,7 +25,8 @@ class TestInstanceIou(unittest.TestCase):
             gt_instances = gt_instances.cuda()
         ious = instance_iou(proposed_instances, gt_instances)
         torch.testing.assert_allclose(
-            ious.cpu(), torch.tensor([[1, 0, 0], [0, 2 / 3.0, 0], [0, 1.0 / 4.0, 1.0 / 2.0]]),
+            ious.cpu(),
+            torch.tensor([[1, 0, 0], [0, 2 / 3.0, 0], [0, 1.0 / 4.0, 1.0 / 2.0]]),
         )
 
     def test_batch(self, cuda=False):
@@ -42,7 +43,14 @@ class TestInstanceIou(unittest.TestCase):
             batch = batch.cuda()
         ious = instance_iou(proposed_instances, gt_instances, batch=batch)
         torch.testing.assert_allclose(
-            ious.cpu(), torch.tensor([[0.5, 0.5, 0, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1],]),
+            ious.cpu(),
+            torch.tensor(
+                [
+                    [0.5, 0.5, 0, 0, 0],
+                    [0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 1],
+                ]
+            ),
         )
 
     @run_if_cuda

@@ -112,12 +112,48 @@ class TestBallPartial(unittest.TestCase):
         batch_b = torch.tensor([0 for i in range(b.shape[0] // 2)] + [1 for i in range(b.shape[0] // 2, b.shape[0])])
         R = 1
 
-        idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True,)
-        idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True,)
+        idx, dist = ball_query(
+            R,
+            15,
+            a,
+            b,
+            mode="PARTIAL_DENSE",
+            batch_x=batch_a,
+            batch_y=batch_b,
+            sort=True,
+        )
+        idx1, dist = ball_query(
+            R,
+            15,
+            a,
+            b,
+            mode="PARTIAL_DENSE",
+            batch_x=batch_a,
+            batch_y=batch_b,
+            sort=True,
+        )
         torch.testing.assert_allclose(idx1, idx)
         with self.assertRaises(AssertionError):
-            idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=False,)
-            idx1, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=False,)
+            idx, dist = ball_query(
+                R,
+                15,
+                a,
+                b,
+                mode="PARTIAL_DENSE",
+                batch_x=batch_a,
+                batch_y=batch_b,
+                sort=False,
+            )
+            idx1, dist = ball_query(
+                R,
+                15,
+                a,
+                b,
+                mode="PARTIAL_DENSE",
+                batch_x=batch_a,
+                batch_y=batch_b,
+                sort=False,
+            )
             torch.testing.assert_allclose(idx1, idx)
 
         self.assertEqual(idx.shape[0], b.shape[0])
@@ -144,7 +180,16 @@ class TestBallPartial(unittest.TestCase):
         ).cuda()
         R = 1
 
-        idx, dist = ball_query(R, 15, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=False,)
+        idx, dist = ball_query(
+            R,
+            15,
+            a,
+            b,
+            mode="PARTIAL_DENSE",
+            batch_x=batch_a,
+            batch_y=batch_b,
+            sort=False,
+        )
 
         # Comparison to see if we have the same result
         tree = KDTree(a.cpu().detach().numpy())

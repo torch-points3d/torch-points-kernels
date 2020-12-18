@@ -38,7 +38,7 @@ def _grow_proximity_core(neighbours, min_cluster_size):
 
 
 def grow_proximity(pos, batch, nsample=16, radius=0.02, min_cluster_size=32):
-    """ Grow based on proximity only
+    """Grow based on proximity only
     Neighbour search is done on device while the cluster assignement is done on cpu"""
     assert pos.shape[0] == batch.shape[0]
     neighbours = ball_query_partial_dense(radius, nsample, pos, pos, batch, batch)[0].cpu().numpy()
@@ -48,7 +48,7 @@ def grow_proximity(pos, batch, nsample=16, radius=0.02, min_cluster_size=32):
 def region_grow(
     pos, labels, batch, ignore_labels=[], nsample=16, radius=0.02, min_cluster_size=32
 ) -> List[torch.Tensor]:
-    """ Region growing clustering algorithm proposed in
+    """Region growing clustering algorithm proposed in
     PointGroup: Dual-Set Point Grouping for 3D Instance Segmentation
     https://arxiv.org/pdf/2004.01658.pdf
     for instance segmentation
@@ -93,7 +93,11 @@ def region_grow(
 
         # Cluster
         label_clusters = grow_proximity(
-            pos[label_mask, :], remaped_batch, nsample=nsample, radius=radius, min_cluster_size=min_cluster_size,
+            pos[label_mask, :],
+            remaped_batch,
+            nsample=nsample,
+            radius=radius,
+            min_cluster_size=min_cluster_size,
         )
 
         # Remap indices to original coordinates

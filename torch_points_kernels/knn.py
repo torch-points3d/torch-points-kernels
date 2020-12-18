@@ -2,7 +2,7 @@ import torch_points_kernels.points_cpu as tpcpu
 
 
 def knn(pos_support, pos, k):
-    """ Dense knn serach
+    """Dense knn serach
     Arguments:
         pos_support - [B,N,3] support points
         pos - [B,M,3] centre of queries

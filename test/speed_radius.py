@@ -23,8 +23,26 @@ class TestRadiusSpeed(unittest.TestCase):
         R = 1
         samples = 50
 
-        idx, dist = ball_query(R, samples, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True,)
-        idx1, dist = ball_query(R, samples, a, b, mode="PARTIAL_DENSE", batch_x=batch_a, batch_y=batch_b, sort=True,)
+        idx, dist = ball_query(
+            R,
+            samples,
+            a,
+            b,
+            mode="PARTIAL_DENSE",
+            batch_x=batch_a,
+            batch_y=batch_b,
+            sort=True,
+        )
+        idx1, dist = ball_query(
+            R,
+            samples,
+            a,
+            b,
+            mode="PARTIAL_DENSE",
+            batch_x=batch_a,
+            batch_y=batch_b,
+            sort=True,
+        )
         print(time.time() - start)
         torch.testing.assert_allclose(idx1, idx)
 

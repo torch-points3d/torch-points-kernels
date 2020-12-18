@@ -12,7 +12,16 @@ from torch_points_kernels.cluster import grow_proximity, region_grow
 class TestGrow(unittest.TestCase):
     def setUp(self):
         self.pos = torch.tensor(
-            [[0, 0, 0], [1, 0, 0], [2, 0, 0], [10, 0, 0], [0, 0, 0], [1, 0, 0], [2, 0, 0], [10, 0, 0],]
+            [
+                [0, 0, 0],
+                [1, 0, 0],
+                [2, 0, 0],
+                [10, 0, 0],
+                [0, 0, 0],
+                [1, 0, 0],
+                [2, 0, 0],
+                [10, 0, 0],
+            ]
         )
         self.batch = torch.tensor([0, 0, 0, 0, 1, 1, 1, 1])
         self.labels = torch.tensor([0, 0, 1, 1, 0, 1, 1, 10])
