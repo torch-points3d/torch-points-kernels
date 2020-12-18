@@ -1,3 +1,8 @@
+# 0.6.9
+## Additions
+
+- Cubic feature sampling kernel as proposed in https://arxiv.org/pdf/2006.03761
+
 # 0.6.8
 ## Bug fix
 - Comilation with older GPU architecture
