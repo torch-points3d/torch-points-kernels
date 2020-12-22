@@ -2,8 +2,8 @@
 #include <cuda_runtime.h>
 #include <torch/extension.h>
 
-#include <vector>
 #include "cuda_utils.h"
+#include <vector>
 
 template <typename scalar_t>
 __global__ void chamfer_dist_kernel(int batch_size, int n, const scalar_t* __restrict__ xyz1, int m,
