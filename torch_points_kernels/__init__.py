@@ -15,4 +15,5 @@ __all__ = [
     "instance_iou",
     "chamfer_dist",
     "cubic_feature_sampling",
+    "gridding",
 ]

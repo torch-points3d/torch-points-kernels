@@ -19,15 +19,16 @@ __device__ int compute_index(int offset_x, int offset_y, int offset_z, int len_y
     return offset_x * len_y * len_z + offset_y * len_z + offset_z;
 }
 
-__device__ float compute_weight(float x, float x0)
+template <typename scalar_t>
+__device__ scalar_t compute_weight(scalar_t x, scalar_t x0)
 {
     return 1 - abs(x - x0);
 }
 
 template <typename scalar_t>
 __global__ void
-gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float min_z,
-                int len_y, int len_z, const scalar_t* __restrict__ ptcloud,
+gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float min_z, int len_y,
+                int len_z, const scalar_t* __restrict__ ptcloud,
                 scalar_t* __restrict__ grid_weights, scalar_t* __restrict__ grid_pt_weights,
                 int* __restrict__ grid_pt_indexes)
 {
@@ -72,51 +73,51 @@ gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float 
         // Compute weights and corresponding positions, a loop for 8 points
         // LLL -> Lower X, Lower Y, Lower Z
         grid_pt_indexes[j * 8 + 0] = compute_index(lx_offset, ly_offset, lz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 0] = compute_weight(pt_x, lower_x);
-        grid_pt_weights[j * 24 + 1] = compute_weight(pt_y, lower_y);
-        grid_pt_weights[j * 24 + 2] = compute_weight(pt_z, lower_z);
+        grid_pt_weights[j * 24 + 0] = compute_weight<scalar_t>(pt_x, lower_x);
+        grid_pt_weights[j * 24 + 1] = compute_weight<scalar_t>(pt_y, lower_y);
+        grid_pt_weights[j * 24 + 2] = compute_weight<scalar_t>(pt_z, lower_z);
 
         // LLU -> Lower X, Lower Y, Upper Z
         grid_pt_indexes[j * 8 + 1] = compute_index(lx_offset, ly_offset, uz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 3] = compute_weight(pt_x, lower_x);
-        grid_pt_weights[j * 24 + 4] = compute_weight(pt_y, lower_y);
-        grid_pt_weights[j * 24 + 5] = compute_weight(pt_z, upper_z);
+        grid_pt_weights[j * 24 + 3] = compute_weight<scalar_t>(pt_x, lower_x);
+        grid_pt_weights[j * 24 + 4] = compute_weight<scalar_t>(pt_y, lower_y);
+        grid_pt_weights[j * 24 + 5] = compute_weight<scalar_t>(pt_z, upper_z);
 
         // LUL -> Lower X, Upper Y, Lower Z
         grid_pt_indexes[j * 8 + 2] = compute_index(lx_offset, uy_offset, lz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 6] = compute_weight(pt_x, lower_x);
-        grid_pt_weights[j * 24 + 7] = compute_weight(pt_y, upper_y);
-        grid_pt_weights[j * 24 + 8] = compute_weight(pt_z, lower_z);
+        grid_pt_weights[j * 24 + 6] = compute_weight<scalar_t>(pt_x, lower_x);
+        grid_pt_weights[j * 24 + 7] = compute_weight<scalar_t>(pt_y, upper_y);
+        grid_pt_weights[j * 24 + 8] = compute_weight<scalar_t>(pt_z, lower_z);
 
         // LUU -> Lower X, Upper Y, Upper Z
         grid_pt_indexes[j * 8 + 3] = compute_index(lx_offset, uy_offset, uz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 9] = compute_weight(pt_x, lower_x);
-        grid_pt_weights[j * 24 + 10] = compute_weight(pt_y, upper_y);
-        grid_pt_weights[j * 24 + 11] = compute_weight(pt_z, upper_z);
+        grid_pt_weights[j * 24 + 9] = compute_weight<scalar_t>(pt_x, lower_x);
+        grid_pt_weights[j * 24 + 10] = compute_weight<scalar_t>(pt_y, upper_y);
+        grid_pt_weights[j * 24 + 11] = compute_weight<scalar_t>(pt_z, upper_z);
 
         // ULL -> Upper X, Lower Y, Lower Z
         grid_pt_indexes[j * 8 + 4] = compute_index(ux_offset, ly_offset, lz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 12] = compute_weight(pt_x, upper_x);
-        grid_pt_weights[j * 24 + 13] = compute_weight(pt_y, lower_y);
-        grid_pt_weights[j * 24 + 14] = compute_weight(pt_z, lower_z);
+        grid_pt_weights[j * 24 + 12] = compute_weight<scalar_t>(pt_x, upper_x);
+        grid_pt_weights[j * 24 + 13] = compute_weight<scalar_t>(pt_y, lower_y);
+        grid_pt_weights[j * 24 + 14] = compute_weight<scalar_t>(pt_z, lower_z);
 
         // ULU -> Upper X, Lower Y, Upper Z
         grid_pt_indexes[j * 8 + 5] = compute_index(ux_offset, ly_offset, uz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 15] = compute_weight(pt_x, upper_x);
-        grid_pt_weights[j * 24 + 16] = compute_weight(pt_y, lower_y);
-        grid_pt_weights[j * 24 + 17] = compute_weight(pt_z, upper_z);
+        grid_pt_weights[j * 24 + 15] = compute_weight<scalar_t>(pt_x, upper_x);
+        grid_pt_weights[j * 24 + 16] = compute_weight<scalar_t>(pt_y, lower_y);
+        grid_pt_weights[j * 24 + 17] = compute_weight<scalar_t>(pt_z, upper_z);
 
         // UUL -> Upper X, Upper Y, Lower Z
         grid_pt_indexes[j * 8 + 6] = compute_index(ux_offset, uy_offset, lz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 18] = compute_weight(pt_x, upper_x);
-        grid_pt_weights[j * 24 + 19] = compute_weight(pt_y, upper_y);
-        grid_pt_weights[j * 24 + 20] = compute_weight(pt_z, lower_z);
+        grid_pt_weights[j * 24 + 18] = compute_weight<scalar_t>(pt_x, upper_x);
+        grid_pt_weights[j * 24 + 19] = compute_weight<scalar_t>(pt_y, upper_y);
+        grid_pt_weights[j * 24 + 20] = compute_weight<scalar_t>(pt_z, lower_z);
 
         // UUU -> Upper X, Upper Y, Upper Z
         grid_pt_indexes[j * 8 + 7] = compute_index(ux_offset, uy_offset, uz_offset, len_y, len_z);
-        grid_pt_weights[j * 24 + 21] = compute_weight(pt_x, upper_x);
-        grid_pt_weights[j * 24 + 22] = compute_weight(pt_y, upper_y);
-        grid_pt_weights[j * 24 + 23] = compute_weight(pt_z, upper_z);
+        grid_pt_weights[j * 24 + 21] = compute_weight<scalar_t>(pt_x, upper_x);
+        grid_pt_weights[j * 24 + 22] = compute_weight<scalar_t>(pt_y, upper_y);
+        grid_pt_weights[j * 24 + 23] = compute_weight<scalar_t>(pt_z, upper_z);
     }
 
     __syncthreads();
@@ -179,9 +180,9 @@ std::vector<torch::Tensor> gridding_kernel_warpper(float min_x, float max_x, flo
     int n_grid_vertices = len_x * len_y * len_z;
 
     torch::Tensor grid_weights =
-        torch::zeros({batch_size, n_grid_vertices}, torch::CUDA(torch::kFloat));
+        torch::zeros({batch_size, n_grid_vertices}, torch::CUDA(ptcloud.scalar_type()));
     torch::Tensor grid_pt_weights =
-        torch::zeros({batch_size, n_pts, 8, 3}, torch::CUDA(torch::kFloat));
+        torch::zeros({batch_size, n_pts, 8, 3}, torch::CUDA(ptcloud.scalar_type()));
     torch::Tensor grid_pt_indexes = torch::zeros({batch_size, n_pts, 8}, torch::CUDA(torch::kInt));
 
     AT_DISPATCH_FLOATING_TYPES(
@@ -310,7 +311,8 @@ torch::Tensor gridding_grad_kernel_warpper(torch::Tensor grid_pt_weights,
     int n_grid_vertices = grad_grid.size(1);
     int n_pts = grid_pt_indexes.size(1);
 
-    torch::Tensor grad_ptcloud = torch::zeros({batch_size, n_pts, 3}, torch::CUDA(torch::kFloat));
+    torch::Tensor grad_ptcloud =
+        torch::zeros({batch_size, n_pts, 3}, torch::CUDA(grid_pt_weights.scalar_type()));
 
     AT_DISPATCH_FLOATING_TYPES(
         grid_pt_weights.scalar_type(), "gridding_grad_cuda", ([&] {

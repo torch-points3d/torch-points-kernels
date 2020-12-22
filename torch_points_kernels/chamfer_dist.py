@@ -8,9 +8,7 @@ class ChamferFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, xyz1, xyz2):
         if not torch.cuda.is_available():
-            raise NotImplementedError(
-                "CPU version is not available for Chamfer Distance"
-            )
+            raise NotImplementedError("CPU version is not available for Chamfer Distance")
 
         dist1, dist2, idx1, idx2 = tpcuda.chamfer_dist(xyz1, xyz2)
         ctx.save_for_backward(xyz1, xyz2, idx1, idx2)
@@ -20,9 +18,7 @@ class ChamferFunction(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_dist1, grad_dist2):
         xyz1, xyz2, idx1, idx2 = ctx.saved_tensors
-        grad_xyz1, grad_xyz2 = tpcuda.chamfer_dist_grad(
-            xyz1, xyz2, idx1, idx2, grad_dist1, grad_dist2
-        )
+        grad_xyz1, grad_xyz2 = tpcuda.chamfer_dist_grad(xyz1, xyz2, idx1, idx2, grad_dist1, grad_dist2)
         return grad_xyz1, grad_xyz2
 
 
@@ -45,7 +41,7 @@ def chamfer_dist(xyz1, xyz2, ignore_zeros=False):
         (B, ): the distances between B pairs of point clouds
     """
     if len(xyz1.shape) != 3 or xyz1.size(2) != 3 or len(xyz2.shape) != 3 or xyz2.size(2) != 3:
-        raise ValueError('The input point cloud should be of size (B, n_pts, 3)')
+        raise ValueError("The input point cloud should be of size (B, n_pts, 3)")
 
     batch_size = xyz1.size(0)
     if batch_size == 1 and ignore_zeros:
@@ -56,4 +52,3 @@ def chamfer_dist(xyz1, xyz2, ignore_zeros=False):
 
     dist1, dist2 = ChamferFunction.apply(xyz1, xyz2)
     return torch.mean(dist1) + torch.mean(dist2)
-
