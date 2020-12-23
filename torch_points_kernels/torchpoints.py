@@ -216,4 +216,3 @@ def ball_query(
         return ball_query_dense(radius, nsample, x, y, sort=sort)
     else:
         raise Exception("unrecognized mode {}".format(mode))
-
