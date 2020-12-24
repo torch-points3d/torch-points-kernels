@@ -7,26 +7,22 @@
 
 #define CUDA_NUM_THREADS 512
 
-// Computer the number of threads needed in GPU
-inline int get_n_threads(int n)
-{
-    const int pow_2 = std::log(static_cast<float>(n)) / std::log(2.0);
-    return max(min(1 << pow_2, CUDA_NUM_THREADS), 1);
-}
-
-__device__ int compute_index(int offset_x, int offset_y, int offset_z, int len_y, int len_z)
+__device__  int compute_index(int offset_x, int offset_y, int offset_z, int len_y, int len_z)
 {
     return offset_x * len_y * len_z + offset_y * len_z + offset_z;
 }
 
-template <typename scalar_t> __device__ scalar_t compute_weight(scalar_t x, scalar_t x0)
+
+template <typename scalar_t>
+__device__ scalar_t compute_weight(scalar_t x, scalar_t x0)
 {
     return 1 - abs(x - x0);
 }
 
+
 template <typename scalar_t>
 __global__ void
-gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float min_z, int len_y,
+gridding_reverse_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float min_z, int len_y,
                 int len_z, const scalar_t* __restrict__ ptcloud,
                 scalar_t* __restrict__ grid_weights, scalar_t* __restrict__ grid_pt_weights,
                 int* __restrict__ grid_pt_indexes)
@@ -167,7 +163,7 @@ gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float 
     }
 }
 
-std::vector<torch::Tensor> gridding_kernel_warpper(float min_x, float max_x, float min_y,
+std::vector<torch::Tensor> gridding_reverse_kernel_warpper(float min_x, float max_x, float min_y,
                                                    float max_y, float min_z, float max_z,
                                                    torch::Tensor ptcloud, cudaStream_t stream)
 {
@@ -186,7 +182,7 @@ std::vector<torch::Tensor> gridding_kernel_warpper(float min_x, float max_x, flo
 
     AT_DISPATCH_FLOATING_TYPES(
         grid_pt_weights.scalar_type(), "gridding_reverse_cuda", ([&] {
-            gridding_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
+            gridding_reverse_kernel<<<batch_size, opt_n_threads(n_pts), 0, stream>>>(
                 n_grid_vertices, n_pts, min_x, min_y, min_z, len_y, len_z,
                 ptcloud.data_ptr<scalar_t>(), grid_weights.data_ptr<scalar_t>(),
                 grid_pt_weights.data_ptr<scalar_t>(), grid_pt_indexes.data_ptr<int>());
@@ -195,14 +191,14 @@ std::vector<torch::Tensor> gridding_kernel_warpper(float min_x, float max_x, flo
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)
     {
-        printf("Error in gridding_kernel_warpper: %s\n", cudaGetErrorString(err));
+        printf("Error in gridding_reverse_kernel_warpper: %s\n", cudaGetErrorString(err));
     }
     return {grid_weights, grid_pt_weights, grid_pt_indexes};
 }
 
 template <typename scalar_t>
 __global__ void
-gridding_grad_kernel(int n_grid_vertices, int n_pts, const scalar_t* __restrict__ grid_pt_weights,
+gridding_reverse_grad_kernel(int n_grid_vertices, int n_pts, const scalar_t* __restrict__ grid_pt_weights,
                      const int* __restrict__ grid_pt_indexes,
                      const scalar_t* __restrict__ grad_grid, scalar_t* __restrict__ grad_ptcloud)
 {
@@ -302,7 +298,7 @@ gridding_grad_kernel(int n_grid_vertices, int n_pts, const scalar_t* __restrict_
     }
 }
 
-torch::Tensor gridding_grad_kernel_warpper(torch::Tensor grid_pt_weights,
+torch::Tensor gridding_reverse_grad_kernel_warpper(torch::Tensor grid_pt_weights,
                                            torch::Tensor grid_pt_indexes, torch::Tensor grad_grid,
                                            cudaStream_t stream)
 {
@@ -315,7 +311,7 @@ torch::Tensor gridding_grad_kernel_warpper(torch::Tensor grid_pt_weights,
 
     AT_DISPATCH_FLOATING_TYPES(
         grid_pt_weights.scalar_type(), "gridding_reverse_grad_cuda", ([&] {
-            gridding_grad_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
+            gridding_reverse_grad_kernel<<<batch_size, opt_n_threads(n_pts), 0, stream>>>(
                 n_grid_vertices, n_pts, grid_pt_weights.data_ptr<scalar_t>(),
                 grid_pt_indexes.data_ptr<int>(), grad_grid.data_ptr<scalar_t>(),
                 grad_ptcloud.data_ptr<scalar_t>());
@@ -324,7 +320,7 @@ torch::Tensor gridding_grad_kernel_warpper(torch::Tensor grid_pt_weights,
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)
     {
-        printf("Error in gridding_grad_kernel_warpper: %s\n", cudaGetErrorString(err));
+        printf("Error in gridding_reverse_grad_kernel_warpper: %s\n", cudaGetErrorString(err));
     }
     return grad_ptcloud;
 }
