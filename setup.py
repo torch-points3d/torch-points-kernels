@@ -31,7 +31,7 @@ def get_ext_modules():
     ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob("{}/src/*.cu".format(ext_src_root))
 
     ext_modules = []
-    if CUDA_HOME:
+    if CUDA_HOME and torch.version.cuda: #check if cuda version of torch is installed
         ext_modules.append(
             CUDAExtension(
                 name="torch_points_kernels.points_cuda",
