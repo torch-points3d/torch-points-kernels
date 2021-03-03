@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+import os
+import glob
 
 try:
     import torch
@@ -11,14 +13,16 @@ try:
 except:
     raise ModuleNotFoundError("Please install pytorch >= 1.1 before proceeding.")
 
-import glob
-
-from os import path
-
-this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
-
+WITH_CUDA = torch.cuda.is_available() and CUDA_HOME is not None
+WITH_CPU = True
+if os.getenv('FORCE_CUDA', '0') == '1':
+    WITH_CUDA = True
+if os.getenv('FORCE_ONLY_CUDA', '0') == '1':
+    WITH_CUDA = True
+    WITH_CPU = False
+if os.getenv('FORCE_ONLY_CPU', '0') == '1':
+    WITH_CPU = True
+    WITH_CUDA = False
 
 def get_ext_modules():
     TORCH_MAJOR = int(torch.__version__.split(".")[0])
@@ -31,7 +35,7 @@ def get_ext_modules():
     ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob("{}/src/*.cu".format(ext_src_root))
 
     ext_modules = []
-    if CUDA_HOME:
+    if WITH_CUDA:
         ext_modules.append(
             CUDAExtension(
                 name="torch_points_kernels.points_cuda",
@@ -47,16 +51,17 @@ def get_ext_modules():
     cpu_ext_src_root = "cpu"
     cpu_ext_sources = glob.glob("{}/src/*.cpp".format(cpu_ext_src_root))
 
-    ext_modules.append(
-        CppExtension(
-            name="torch_points_kernels.points_cpu",
-            sources=cpu_ext_sources,
-            include_dirs=["{}/include".format(cpu_ext_src_root)],
-            extra_compile_args={
-                "cxx": extra_compile_args,
-            },
+    if WITH_CPU:
+        ext_modules.append(
+            CppExtension(
+                name="torch_points_kernels.points_cpu",
+                sources=cpu_ext_sources,
+                include_dirs=["{}/include".format(cpu_ext_src_root)],
+                extra_compile_args={
+                    "cxx": extra_compile_args,
+                },
+            )
         )
-    )
     return ext_modules
 
 
@@ -68,6 +73,9 @@ class CustomBuildExtension(BuildExtension):
 def get_cmdclass():
     return {"build_ext": CustomBuildExtension}
 
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 requirements = ["torch>=1.1.0", "numba", "scikit-learn"]
 
