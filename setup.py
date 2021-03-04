@@ -21,8 +21,8 @@ if os.getenv('FORCE_ONLY_CUDA', '0') == '1':
     WITH_CUDA = True
     WITH_CPU = False
 if os.getenv('FORCE_ONLY_CPU', '0') == '1':
-    WITH_CPU = True
     WITH_CUDA = False
+    WITH_CPU = True
 
 def get_ext_modules():
     TORCH_MAJOR = int(torch.__version__.split(".")[0])
@@ -77,7 +77,7 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-requirements = ["torch>=1.1.0", "numba", "scikit-learn"]
+requirements = ["torch>=1.1.0", "numba", "numpy<1.20", "scikit-learn"]
 
 url = "https://github.com/nicolas-chaulet/torch-points-kernels"
 __version__ = "0.6.10"
