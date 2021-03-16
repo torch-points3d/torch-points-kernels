@@ -13,6 +13,11 @@ or with poetry:
 poetry add torch-points-kernels
 ```
 
+To force CUDA installation (for example on Docker builds) please use the flag `FORCE_CUDA` like
+```
+pip install torch-points-kernels FORCE_CUDA=1
+```
+
 ## Usage
 ```
 import torch
