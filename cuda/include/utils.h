@@ -17,11 +17,11 @@
 #define CHECK_IS_INT(x)                                                                            \
     do                                                                                             \
     {                                                                                              \
-        TORCH_CHECK(x.scalar_type() == at::ScalarType::Int, #x " must be an int tensor");          \
+        TORCH_CHECK(isIntegralType(x.scalar_type(), false), #x " must be an int tensor");          \
     } while (0)
 
 #define CHECK_IS_FLOAT(x)                                                                          \
     do                                                                                             \
     {                                                                                              \
-        TORCH_CHECK(x.scalar_type() == at::ScalarType::Float, #x " must be a float tensor");       \
+        TORCH_CHECK(isFloatingType(x.scalar_type()), #x " must be a float tensor");       \
     } while (0)
