@@ -43,9 +43,9 @@ def three_nn(unknown, known):
     Parameters
     ----------
     unknown : torch.Tensor
-        (B, n, 3) tensor of known features
+        (B, n, 3) tensor of unknown features
     known : torch.Tensor
-        (B, m, 3) tensor of unknown features
+        (B, m, 3) tensor of known features
 
     Returns
     -------
