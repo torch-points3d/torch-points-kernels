@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Conda package
         run: |
-          ./conda/pytorch-geometric/build_conda.sh ${{ matrix.python-version }} ${{ matrix.torch-version }} ${{ matrix.cuda-version }}
+          ./conda/torch-points-kernels/build_conda.sh ${{ matrix.python-version }} ${{ matrix.torch-version }} ${{ matrix.cuda-version }}
         shell:
           bash -l {0}
 
