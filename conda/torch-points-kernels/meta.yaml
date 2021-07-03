@@ -1,0 +1,41 @@
+package:
+  name: torch-points-kernels
+  version: 0.7.1
+
+source:
+  path: ../..
+
+requirements:
+  build:
+    - {{ compiler('c') }}  # [win]
+
+  host:
+    - pip
+    - python {{ environ.get('PYTHON_VERSION') }}
+    - {{ environ.get('CONDA_PYTORCH_CONSTRAINT') }}
+    - {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+
+  run:
+    - python {{ environ.get('PYTHON_VERSION') }}
+    - {{ environ.get('CONDA_PYTORCH_CONSTRAINT') }}
+    - {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+    - numpy
+    - numba
+    - scikit-learn
+
+build:
+  string: py{{ environ.get('PYTHON_VERSION').replace('.', '') }}_torch_{{ environ['TORCH_VERSION'] }}_{{ environ['CUDA_VERSION'] }}
+  script: pip install .
+  script_env:
+    - FORCE_CUDA
+
+test:
+  imports:
+    - torch
+    - numpy
+    - scikit-learn
+
+about:
+  home: https://github.com/nicolas-chaulet/torch-points-kernels
+  license: MIT
+  summary: Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point clouds.
