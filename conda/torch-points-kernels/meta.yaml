@@ -31,9 +31,7 @@ build:
 
 test:
   imports:
-    - torch
-    - numpy
-    - scikit-learn
+    - torch_points_kernels
 
 about:
   home: https://github.com/nicolas-chaulet/torch-points-kernels
