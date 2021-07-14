@@ -1,3 +1,7 @@
+# 0.7.1
+## Additions
+- Add support for anaconda installation
+
 # 0.7.0
 ## Change
 - Added some extra compilation flags: FORCE_CUDA=1 for CUDA install and FORCE_ONLY_CPU=1 for CPU only install.
