@@ -1,11 +1,12 @@
 import torch
-
+from torch.cuda.amp import custom_bwd,custom_fwd
 if torch.cuda.is_available():
     import torch_points_kernels.points_cuda as tpcuda
 
 
 class ChamferFunction(torch.autograd.Function):
     @staticmethod
+    @custom_fwd(cast_inputs=torch.half)
     def forward(ctx, xyz1, xyz2):
         if not torch.cuda.is_available():
             raise NotImplementedError("CPU version is not available for Chamfer Distance")
@@ -16,6 +17,7 @@ class ChamferFunction(torch.autograd.Function):
         return dist1, dist2
 
     @staticmethod
+    @custom_bwd
     def backward(ctx, grad_dist1, grad_dist2):
         xyz1, xyz2, idx1, idx2 = ctx.saved_tensors
         grad_xyz1, grad_xyz2 = tpcuda.chamfer_dist_grad(xyz1, xyz2, idx1, idx2, grad_dist1, grad_dist2)

@@ -1,11 +1,12 @@
 import torch
-
+from torch.cuda.amp import custom_bwd,custom_fwd
 if torch.cuda.is_available():
     import torch_points_kernels.points_cuda as tpcuda
 
 
 class CubicFeatureSamplingFunction(torch.autograd.Function):
     @staticmethod
+    @custom_fwd(cast_inputs=torch.half)
     def forward(ctx, ptcloud, cubic_features, neighborhood_size=1):
         scale = cubic_features.size(2)
         if not torch.cuda.is_available():
@@ -18,6 +19,7 @@ class CubicFeatureSamplingFunction(torch.autograd.Function):
         return point_features
 
     @staticmethod
+    @custom_bwd
     def backward(ctx, grad_point_features):
         scale, neighborhood_size, grid_pt_indexes = ctx.saved_tensors
         scale = int(scale.item())
