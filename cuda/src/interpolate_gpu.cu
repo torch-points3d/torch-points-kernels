@@ -9,7 +9,7 @@
 // input: unknown(b, n, 3) known(b, m, 3)
 // output: dist2(b, n, 3), idx(b, n, 3)
 template <typename scalar_t>
-__global__ void three_nn_kernel(int b, int n, int m, const scalar_t* __restrict__ unknown,
+__global__ void three_nn_kernel(int b, int n, int m, const double upper_bd, const scalar_t* __restrict__ unknown,
                                 const scalar_t* __restrict__ known, scalar_t* __restrict__ dist2,
                                 int* __restrict__ idx)
 {
@@ -26,10 +26,8 @@ __global__ void three_nn_kernel(int b, int n, int m, const scalar_t* __restrict_
         scalar_t ux = unknown[j * 3 + 0];
         scalar_t uy = unknown[j * 3 + 1];
         scalar_t uz = unknown[j * 3 + 2];
-        scalar_t best1 = 65504, best2 = 65504, best3 = 65504;
-        if ((best1+1) > best1){
-            best1 = 1e20, best2 = 1e20, best3 = 1e20;
-        }
+        scalar_t best1 = upper_bd, best2 = upper_bd, best3 = upper_bd;
+
         // switch (unknown.scalar_type())
         // {
         // case torch::ScalarType::Double:
@@ -95,7 +93,18 @@ std::vector<torch::Tensor> three_nn_kernel_wrapper(torch::Tensor unknowns, torch
 
     torch::Tensor idx = torch::zeros({b, n, 3}, torch::CUDA(torch::kInt));
     torch::Tensor dist2 = torch::zeros({b, n, 3}, torch::CUDA(unknowns.scalar_type()));
-
+    double upper_bd = 0;
+    switch (unknowns.scalar_type()){
+        case torch::ScalarType::Double:
+            upper_bd = 1e40;
+            break;
+        case torch::ScalarType::Half:
+            upper_bd = 65504;
+            break; 
+        default:
+            upper_bd = 1e20;
+            break;                    
+    }
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     // three_nn_kernel<<<b, opt_n_threads(n), 0, stream>>>(b, n, m, unknown, known, dist2, idx);
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
@@ -104,7 +113,7 @@ std::vector<torch::Tensor> three_nn_kernel_wrapper(torch::Tensor unknowns, torch
             [&]
             {
                 three_nn_kernel<scalar_t><<<b, opt_n_threads(n), 0, stream>>>(
-                    b, n, m, unknowns.data_ptr<scalar_t>(), knows.data_ptr<scalar_t>(),
+                    b, n, m, upper_bd, unknowns.data_ptr<scalar_t>(), knows.data_ptr<scalar_t>(),
                     dist2.data_ptr<scalar_t>(), idx.data_ptr<int>());
             }));
     CUDA_CHECK_ERRORS();
