@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <torch/extension.h>
-
+#include <THC/THCAtomics.cuh>
 #include "cuda_utils.h"
 
 #define CUDA_NUM_THREADS 512
@@ -118,7 +118,7 @@ std::vector<torch::Tensor> cubic_feature_sampling_kernel_wrapper(int scale, int 
     torch::Tensor grid_pt_indexes =
         torch::zeros({batch_size, n_pts, n_vertices}, torch::CUDA(torch::kInt));
 
-    AT_DISPATCH_FLOATING_TYPES(
+    AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         ptcloud.scalar_type(), "cubic_feature_sampling_cuda", ([&] {
             cubic_feature_sampling_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
                 scale, neighborhood_size, n_vertices, n_pts, n_cubic_channels,
@@ -170,7 +170,7 @@ __global__ void cubic_feature_sampling_grad_kernel(int scale, int neighborhood_s
                 // atomicAdd(&(grad_ptcloud[i * 3 + 0]), grad_val);
                 // atomicAdd(&(grad_ptcloud[i * 3 + 1]), grad_val);
                 // atomicAdd(&(grad_ptcloud[i * 3 + 2]), grad_val);
-                atomicAdd(&(grad_cubic_features[k * cub_scale + vertex_idx]), grad_val);
+                gpuAtomicAdd(&(grad_cubic_features[k * cub_scale + vertex_idx]), grad_val);
             }
         }
     }
@@ -192,7 +192,7 @@ cubic_feature_sampling_grad_kernel_wrapper(int scale, int neighborhood_size,
         torch::zeros({batch_size, n_cubic_channels, scale, scale, scale},
                      torch::CUDA(grad_point_features.scalar_type()));
 
-    AT_DISPATCH_FLOATING_TYPES(
+    AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         grad_point_features.scalar_type(), "cubic_feature_sampling_grad_cuda", ([&] {
             cubic_feature_sampling_grad_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
                 scale, neighborhood_size, n_vertices, n_pts, n_cubic_channels,
