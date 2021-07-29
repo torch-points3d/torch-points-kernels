@@ -104,9 +104,9 @@ std::pair<torch::Tensor, torch::Tensor> query_ball_point_kernel_dense_wrapper(fl
     int b = xyz.size(0);
     int n = xyz.size(1);
     int m = new_xyz.size(1);
-    torch::Tensor idx =
+    auto idx =
         torch::zeros({new_xyz.size(0), new_xyz.size(1), nsample}, torch::CUDA(torch::ScalarType::Long));
-    torch::Tensor dist = torch::full({new_xyz.size(0), new_xyz.size(1), nsample}, -1,
+    auto dist = torch::full({new_xyz.size(0), new_xyz.size(1), nsample}, -1,
                                      torch::CUDA(xyz.scalar_type()));
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -138,9 +138,9 @@ query_ball_point_kernel_partial_wrapper(float radius, int nsample, torch::Tensor
 
     int size_x = x.size(0);
     int size_y = y.size(0);
-    torch::Tensor idx = torch::full({y.size(0), nsample}, -1, torch::CUDA(torch::ScalarType::Long));
+    auto idx = torch::full({y.size(0), nsample}, -1, torch::CUDA(torch::ScalarType::Long));
 
-    torch::Tensor dist = torch::full({y.size(0), nsample}, -1, torch::CUDA(y.scalar_type()));
+    auto dist = torch::full({y.size(0), nsample}, -1, torch::CUDA(y.scalar_type()));
 
     cudaSetDevice(x.get_device());
     auto batch_sizes = (int64_t*)malloc(sizeof(int64_t));
@@ -153,8 +153,6 @@ query_ball_point_kernel_partial_wrapper(float radius, int nsample, torch::Tensor
     batch_y = degree(batch_y, batch_size);
     batch_y = torch::cat({torch::zeros(1, batch_y.options()), batch_y.cumsum(0)}, 0);
 
-    // query_ball_point_kernel_partial_dense<<<batch_size, TOTAL_THREADS_SPARSE>>>(
-    //     size_x, size_y, radius, nsample, x, y, batch_x, batch_y, idx_out, dist_out);
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         x.scalar_type(), "query_ball_point_kernel_dense_cuda",
         (

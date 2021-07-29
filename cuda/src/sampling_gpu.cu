@@ -151,7 +151,7 @@ torch::Tensor furthest_point_sampling_kernel_wrapper(torch::Tensor points, const
     int b = points.size(0);
     int n = points.size(1);
     int m = nsamples;
-    torch::Tensor idxs =
+    auto idxs =
         torch::zeros({points.size(0), nsamples}, torch::CUDA(torch::ScalarType::Int));
 
     float init_num = 0;
@@ -165,7 +165,7 @@ torch::Tensor furthest_point_sampling_kernel_wrapper(torch::Tensor points, const
         break;
     }
 
-    torch::Tensor temp =
+    auto temp =
         torch::full({points.size(0), points.size(1)}, init_num, torch::CUDA(points.scalar_type()));
     const unsigned int n_threads = opt_n_threads(n);
 

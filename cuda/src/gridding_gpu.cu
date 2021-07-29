@@ -1,9 +1,9 @@
+#include "cuda_utils.h"
+#include <THC/THCAtomics.cuh>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <torch/extension.h>
-#include <THC/THCAtomics.cuh>
-#include "cuda_utils.h"
 
 #define CUDA_NUM_THREADS 512
 
@@ -19,8 +19,7 @@ __device__ int compute_index(int offset_x, int offset_y, int offset_z, int len_y
     return offset_x * len_y * len_z + offset_y * len_z + offset_z;
 }
 
-template <typename scalar_t>
-__device__ scalar_t compute_weight(scalar_t x, scalar_t x0)
+template <typename scalar_t> __device__ scalar_t compute_weight(scalar_t x, scalar_t x0)
 {
     return 1 - abs(x - x0);
 }
@@ -128,43 +127,43 @@ gridding_kernel(int n_grid_vertices, int n_pts, float min_x, float min_y, float 
         // LLL -> Lower X, Lower Y, Lower Z
         gvtx_idx = grid_pt_indexes[j * 8 + 0];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 0] *
-                                                 grid_pt_weights[j * 24 + 1] *
-                                                 grid_pt_weights[j * 24 + 2]);
+                                                    grid_pt_weights[j * 24 + 1] *
+                                                    grid_pt_weights[j * 24 + 2]);
         // LLU -> Lower X, Lower Y, Upper Z
         gvtx_idx = grid_pt_indexes[j * 8 + 1];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 3] *
-                                                 grid_pt_weights[j * 24 + 4] *
-                                                 grid_pt_weights[j * 24 + 5]);
+                                                    grid_pt_weights[j * 24 + 4] *
+                                                    grid_pt_weights[j * 24 + 5]);
         // LUL -> Lower X, Upper Y, Lower Z
         gvtx_idx = grid_pt_indexes[j * 8 + 2];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 6] *
-                                                 grid_pt_weights[j * 24 + 7] *
-                                                 grid_pt_weights[j * 24 + 8]);
+                                                    grid_pt_weights[j * 24 + 7] *
+                                                    grid_pt_weights[j * 24 + 8]);
         // LUU -> Lower X, Upper Y, Upper Z
         gvtx_idx = grid_pt_indexes[j * 8 + 3];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 9] *
-                                                 grid_pt_weights[j * 24 + 10] *
-                                                 grid_pt_weights[j * 24 + 11]);
+                                                    grid_pt_weights[j * 24 + 10] *
+                                                    grid_pt_weights[j * 24 + 11]);
         // ULL -> Upper X, Lower Y, Lower Z
         gvtx_idx = grid_pt_indexes[j * 8 + 4];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 12] *
-                                                 grid_pt_weights[j * 24 + 13] *
-                                                 grid_pt_weights[j * 24 + 14]);
+                                                    grid_pt_weights[j * 24 + 13] *
+                                                    grid_pt_weights[j * 24 + 14]);
         // ULU -> Upper X, Lower Y, Upper Z
         gvtx_idx = grid_pt_indexes[j * 8 + 5];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 15] *
-                                                 grid_pt_weights[j * 24 + 16] *
-                                                 grid_pt_weights[j * 24 + 17]);
+                                                    grid_pt_weights[j * 24 + 16] *
+                                                    grid_pt_weights[j * 24 + 17]);
         // UUL -> Upper X, Upper Y, Lower Z
         gvtx_idx = grid_pt_indexes[j * 8 + 6];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 18] *
-                                                 grid_pt_weights[j * 24 + 19] *
-                                                 grid_pt_weights[j * 24 + 20]);
+                                                    grid_pt_weights[j * 24 + 19] *
+                                                    grid_pt_weights[j * 24 + 20]);
         // UUU -> Upper X, Upper Y, Upper Z
         gvtx_idx = grid_pt_indexes[j * 8 + 7];
         gpuAtomicAdd(&(grid_weights[gvtx_idx]), grid_pt_weights[j * 24 + 21] *
-                                                 grid_pt_weights[j * 24 + 22] *
-                                                 grid_pt_weights[j * 24 + 23]);
+                                                    grid_pt_weights[j * 24 + 22] *
+                                                    grid_pt_weights[j * 24 + 23]);
     }
 }
 
@@ -179,19 +178,22 @@ std::vector<torch::Tensor> gridding_kernel_warpper(float min_x, float max_x, flo
     int len_z = max_z - min_z + 1;
     int n_grid_vertices = len_x * len_y * len_z;
 
-    torch::Tensor grid_weights =
+    auto grid_weights =
         torch::zeros({batch_size, n_grid_vertices}, torch::CUDA(ptcloud.scalar_type()));
-    torch::Tensor grid_pt_weights =
+    auto grid_pt_weights =
         torch::zeros({batch_size, n_pts, 8, 3}, torch::CUDA(ptcloud.scalar_type()));
-    torch::Tensor grid_pt_indexes = torch::zeros({batch_size, n_pts, 8}, torch::CUDA(torch::kInt));
+    auto grid_pt_indexes = torch::zeros({batch_size, n_pts, 8}, torch::CUDA(torch::kInt));
 
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
-        ptcloud.scalar_type(), "gridding_cuda", ([&] {
-            gridding_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
-                n_grid_vertices, n_pts, min_x, min_y, min_z, len_y, len_z,
-                ptcloud.data_ptr<scalar_t>(), grid_weights.data_ptr<scalar_t>(),
-                grid_pt_weights.data_ptr<scalar_t>(), grid_pt_indexes.data_ptr<int>());
-        }));
+        ptcloud.scalar_type(), "gridding_cuda",
+        (
+            [&]
+            {
+                gridding_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
+                    n_grid_vertices, n_pts, min_x, min_y, min_z, len_y, len_z,
+                    ptcloud.data_ptr<scalar_t>(), grid_weights.data_ptr<scalar_t>(),
+                    grid_pt_weights.data_ptr<scalar_t>(), grid_pt_indexes.data_ptr<int>());
+            }));
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)
@@ -311,16 +313,19 @@ torch::Tensor gridding_grad_kernel_warpper(torch::Tensor grid_pt_weights,
     int n_grid_vertices = grad_grid.size(1);
     int n_pts = grid_pt_indexes.size(1);
 
-    torch::Tensor grad_ptcloud =
+    auto grad_ptcloud =
         torch::zeros({batch_size, n_pts, 3}, torch::CUDA(grid_pt_weights.scalar_type()));
 
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
-        grid_pt_weights.scalar_type(), "gridding_grad_cuda", ([&] {
-            gridding_grad_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
-                n_grid_vertices, n_pts, grid_pt_weights.data_ptr<scalar_t>(),
-                grid_pt_indexes.data_ptr<int>(), grad_grid.data_ptr<scalar_t>(),
-                grad_ptcloud.data_ptr<scalar_t>());
-        }));
+        grid_pt_weights.scalar_type(), "gridding_grad_cuda",
+        (
+            [&]
+            {
+                gridding_grad_kernel<<<batch_size, get_n_threads(n_pts), 0, stream>>>(
+                    n_grid_vertices, n_pts, grid_pt_weights.data_ptr<scalar_t>(),
+                    grid_pt_indexes.data_ptr<int>(), grad_grid.data_ptr<scalar_t>(),
+                    grad_ptcloud.data_ptr<scalar_t>());
+            }));
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess)

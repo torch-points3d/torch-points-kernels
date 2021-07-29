@@ -159,10 +159,10 @@ std::vector<torch::Tensor> chamfer_dist_kernel_wrapper(torch::Tensor xyz1, torch
     const int batch_size = xyz1.size(0);
     const int n = xyz1.size(1); // num_points point cloud A
     const int m = xyz2.size(1); // num_points point cloud B
-    torch::Tensor dist1 = torch::zeros({batch_size, n}, torch::CUDA(xyz1.scalar_type()));
-    torch::Tensor dist2 = torch::zeros({batch_size, m}, torch::CUDA(xyz1.scalar_type()));
-    torch::Tensor idx1 = torch::zeros({batch_size, n}, torch::CUDA(torch::kInt));
-    torch::Tensor idx2 = torch::zeros({batch_size, m}, torch::CUDA(torch::kInt));
+    auto dist1 = torch::zeros({batch_size, n}, torch::CUDA(xyz1.scalar_type()));
+    auto dist2 = torch::zeros({batch_size, m}, torch::CUDA(xyz1.scalar_type()));
+    auto idx1 = torch::zeros({batch_size, n}, torch::CUDA(torch::kInt));
+    auto idx2 = torch::zeros({batch_size, m}, torch::CUDA(torch::kInt));
 
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         xyz1.scalar_type(), "chamfer_dist_cuda", ([&] {
@@ -220,8 +220,8 @@ std::vector<torch::Tensor> chamfer_dist_grad_kernel_wrapper(torch::Tensor xyz1, 
     const int batch_size = xyz1.size(0);
     const int n = xyz1.size(1); // num_points point cloud A
     const int m = xyz2.size(1); // num_points point cloud B
-    torch::Tensor grad_xyz1 = torch::zeros_like(xyz1);
-    torch::Tensor grad_xyz2 = torch::zeros_like(xyz2);
+    auto grad_xyz1 = torch::zeros_like(xyz1);
+    auto grad_xyz2 = torch::zeros_like(xyz2);
 
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         xyz1.scalar_type(), "chamfer_dist_grad_cuda", ([&] {

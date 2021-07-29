@@ -1,15 +1,16 @@
 #include "cuda_utils.h"
+#include <THC/THCAtomics.cuh>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <torch/extension.h>
-#include <THC/THCAtomics.cuh>
 #include <vector>
 
 // input: unknown(b, n, 3) known(b, m, 3)
 // output: dist2(b, n, 3), idx(b, n, 3)
 template <typename scalar_t>
-__global__ void three_nn_kernel(int b, int n, int m, const double upper_bd, const scalar_t* __restrict__ unknown,
+__global__ void three_nn_kernel(int b, int n, int m, const double upper_bd,
+                                const scalar_t* __restrict__ unknown,
                                 const scalar_t* __restrict__ known, scalar_t* __restrict__ dist2,
                                 int* __restrict__ idx)
 {
@@ -73,19 +74,20 @@ std::vector<torch::Tensor> three_nn_kernel_wrapper(torch::Tensor unknowns, torch
     int n = unknowns.size(1);
     int m = knows.size(1);
 
-    torch::Tensor idx = torch::zeros({b, n, 3}, torch::CUDA(torch::kInt));
-    torch::Tensor dist2 = torch::zeros({b, n, 3}, torch::CUDA(unknowns.scalar_type()));
+    auto idx = torch::zeros({b, n, 3}, torch::CUDA(torch::kInt));
+    auto dist2 = torch::zeros({b, n, 3}, torch::CUDA(unknowns.scalar_type()));
     double upper_bd = 0;
-    switch (unknowns.scalar_type()){
-        case torch::ScalarType::Double:
-            upper_bd = 1e40;
-            break;
-        case torch::ScalarType::Half:
-            upper_bd = 65504;
-            break; 
-        default:
-            upper_bd = 1e20;
-            break;                    
+    switch (unknowns.scalar_type())
+    {
+    case torch::ScalarType::Double:
+        upper_bd = 1e40;
+        break;
+    case torch::ScalarType::Half:
+        upper_bd = 65504;
+        break;
+    default:
+        upper_bd = 1e20;
+        break;
     }
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
@@ -143,7 +145,7 @@ torch::Tensor three_interpolate_kernel_wrapper(torch::Tensor points, torch::Tens
     int m = points.size(2);
     int n = idx.size(1);
 
-    torch::Tensor out = torch::zeros({b, c, n}, torch::CUDA(points.scalar_type()));
+    auto out = torch::zeros({b, c, n}, torch::CUDA(points.scalar_type()));
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
@@ -201,7 +203,7 @@ torch::Tensor three_interpolate_grad_kernel_wrapper(torch::Tensor grad_out, torc
     int c = grad_out.size(1);
     int n = grad_out.size(2);
 
-    torch::Tensor grad_points = torch::zeros({b, c, m}, torch::CUDA(grad_out.scalar_type()));
+    auto grad_points = torch::zeros({b, c, m}, torch::CUDA(grad_out.scalar_type()));
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
