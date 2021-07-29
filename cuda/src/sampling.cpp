@@ -10,8 +10,5 @@ torch::Tensor furthest_point_sampling(torch::Tensor points, const int nsamples)
     CHECK_IS_FLOAT(points);
     CHECK_CUDA(points);
 
-
     return furthest_point_sampling_kernel_wrapper(points, nsamples);
-
-    // return output;
 }

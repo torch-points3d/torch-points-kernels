@@ -110,10 +110,6 @@ std::pair<torch::Tensor, torch::Tensor> query_ball_point_kernel_dense_wrapper(fl
                                      torch::CUDA(xyz.scalar_type()));
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-    // query_ball_point_kernel_dense<<<b, opt_n_threads(m), 0, stream>>>(b, n, m, radius, nsample,
-    //                                                                   new_xyz, xyz, idx,
-    //                                                                   dist_out);
-
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         new_xyz.scalar_type(), "query_ball_point_kernel_dense_cuda",
         (

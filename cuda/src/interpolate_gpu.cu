@@ -28,24 +28,6 @@ __global__ void three_nn_kernel(int b, int n, int m, const double upper_bd, cons
         scalar_t uz = unknown[j * 3 + 2];
         scalar_t best1 = upper_bd, best2 = upper_bd, best3 = upper_bd;
 
-        // switch (unknown.scalar_type())
-        // {
-        // case torch::ScalarType::Double:
-        //     best1 = 1e40, best2 = 1e40, best3 = 1e40;
-        //     break;
-        // case torch::ScalarType::Float:
-        //     best1 = 1e20, best2 = 1e20, best3 = 1e20;
-        //     break;
-        // case torch::ScalarType::Half:
-        //     best1 = 65504, best2 = 65504, best3 = 65504;
-        //     break;
-        // case torch::ScalarType::BFloat16:
-        //     best1 = 1e10, best2 = 1e20, best3 = 1e20;
-        //     break;
-        // default:
-        //     best1 = 1e20, best2 = 1e20, best3 = 1e20;
-        //     break;
-        // }
         int besti1 = 0, besti2 = 0, besti3 = 0;
         for (int k = 0; k < m; ++k)
         {
@@ -106,7 +88,6 @@ std::vector<torch::Tensor> three_nn_kernel_wrapper(torch::Tensor unknowns, torch
             break;                    
     }
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-    // three_nn_kernel<<<b, opt_n_threads(n), 0, stream>>>(b, n, m, unknown, known, dist2, idx);
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         unknowns.scalar_type(), "three_nn_kernel_cuda",
         (
@@ -210,10 +191,6 @@ three_interpolate_grad_kernel(int b, int c, int n, int m, const scalar_t* __rest
         gpuAtomicAdd(grad_points + l * m + i1, grad_out[i] * w1);
         gpuAtomicAdd(grad_points + l * m + i2, grad_out[i] * w2);
         gpuAtomicAdd(grad_points + l * m + i3, grad_out[i] * w3);
-
-        // atomicAdd(grad_points + l * m + i1, grad_out[i] * w1);
-        // atomicAdd(grad_points + l * m + i2, grad_out[i] * w2);
-        // atomicAdd(grad_points + l * m + i3, grad_out[i] * w3);
     }
 }
 
@@ -227,9 +204,6 @@ torch::Tensor three_interpolate_grad_kernel_wrapper(torch::Tensor grad_out, torc
     torch::Tensor grad_points = torch::zeros({b, c, m}, torch::CUDA(grad_out.scalar_type()));
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-    // three_interpolate_grad_kernel<<<b, opt_block_config(n, c), 0, stream>>>(
-    //     b, c, n, m, grad_out, idx, weight, grad_points);
-
     AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         grad_out.scalar_type(), "three_interpolate_grad_kernel_cuda",
         (

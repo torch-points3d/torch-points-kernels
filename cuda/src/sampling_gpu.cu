@@ -171,53 +171,6 @@ torch::Tensor furthest_point_sampling_kernel_wrapper(torch::Tensor points, const
 
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-    // switch (n_threads)
-    // {
-    // case 512:
-    //     furthest_point_sampling_kernel<512>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 256:
-    //     furthest_point_sampling_kernel<256>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 128:
-    //     furthest_point_sampling_kernel<128>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 64:
-    //     furthest_point_sampling_kernel<64>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 32:
-    //     furthest_point_sampling_kernel<32>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 16:
-    //     furthest_point_sampling_kernel<16>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 8:
-    //     furthest_point_sampling_kernel<8>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 4:
-    //     furthest_point_sampling_kernel<4>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 2:
-    //     furthest_point_sampling_kernel<2>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // case 1:
-    //     furthest_point_sampling_kernel<1>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    //     break;
-    // default:
-    //     furthest_point_sampling_kernel<512>
-    //         <<<b, n_threads, 0, stream>>>(b, n, m, points, temp, idxs);
-    // }
-
     switch (n_threads)
     {
     case 512:
