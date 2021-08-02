@@ -15,14 +15,15 @@ except:
 
 WITH_CUDA = torch.cuda.is_available() and CUDA_HOME is not None
 WITH_CPU = True
-if os.getenv('FORCE_CUDA', '0') == '1':
+if os.getenv("FORCE_CUDA", "0") == "1":
     WITH_CUDA = True
-if os.getenv('FORCE_ONLY_CUDA', '0') == '1':
+if os.getenv("FORCE_ONLY_CUDA", "0") == "1":
     WITH_CUDA = True
     WITH_CPU = False
-if os.getenv('FORCE_ONLY_CPU', '0') == '1':
+if os.getenv("FORCE_ONLY_CPU", "0") == "1":
     WITH_CUDA = False
     WITH_CPU = True
+
 
 def get_ext_modules():
     TORCH_MAJOR = int(torch.__version__.split(".")[0])
@@ -72,6 +73,7 @@ class CustomBuildExtension(BuildExtension):
 
 def get_cmdclass():
     return {"build_ext": CustomBuildExtension}
+
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
