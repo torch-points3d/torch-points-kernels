@@ -35,6 +35,6 @@ test:
     - torch_points_kernels
 
 about:
-  home: https://github.com/nicolas-chaulet/torch-points-kernels
+  home: https://github.com/torch-points3d/torch-points-kernels
   license: MIT
   summary: Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point clouds.
