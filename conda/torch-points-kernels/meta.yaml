@@ -30,10 +30,6 @@ build:
     - TORCH_CUDA_ARCH_LIST
   preserve_egg_dir: True
 
-test:
-  imports:
-    - torch_points_kernels
-
 about:
   home: https://github.com/torch-points3d/torch-points-kernels
   license: MIT
