@@ -32,7 +32,7 @@ build:
 
 test:
   files:
-    - test/*
+    - test
 
 about:
   home: https://github.com/torch-points3d/torch-points-kernels
