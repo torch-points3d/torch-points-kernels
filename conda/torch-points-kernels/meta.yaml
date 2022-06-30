@@ -31,7 +31,7 @@ build:
   preserve_egg_dir: True
 
 test:
-  files:
+  source_files:
     - test
 
 about:

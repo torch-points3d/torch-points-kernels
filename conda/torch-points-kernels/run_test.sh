@@ -1,2 +1,1 @@
-ls
 $PYTHON -m unittest
