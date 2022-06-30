@@ -17,7 +17,7 @@ jobs:
             - name: Install dependencies
               run: |
                   python -m pip install --upgrade pip
-                  pip install torch "numpy<1.20" scikit-learn flake8 setuptools wheel twine numba
+                  pip install torch "numpy<=1.21" scikit-learn flake8 setuptools wheel twine numba
             - name: Build package
               run: |
                   python setup.py build_ext --inplace
