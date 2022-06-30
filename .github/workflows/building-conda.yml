@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-10.15, windows-2019]
+        os: [ubuntu-18.04, macos-10.15] #, windows-2019]
         python-version: ['3.7', '3.8', '3.9', '3.10']
         torch-version: [1.10.0, 1.11.0, 1.12.0]
         cuda-version: ['cpu', 'cu102', 'cu113', 'cu115', 'cu116']
@@ -34,13 +34,15 @@ jobs:
             cuda-version: 'cu113'
           - os: macos-10.15
             cuda-version: 'cu115'
+          - os: macos-10.15
+            cuda-version: 'cu116'
+          - os: macos-10.15
+            python-version: '3.10' # this is unhappy
           # There is a weird `glibc=2.27` bug going on for this combination:
           - os: ubuntu-18.04
             python-version: '3.10'
           - os: ubuntu-18.04
             cuda-version: 'cu115'
-          - os: macos-10.15
-            cuda-version: 'cu116'
           - os: windows-2019
             cuda-version: 'cu102'
           - os: windows-2019  # Complains about CUDA mismatch.
