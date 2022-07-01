@@ -1,5 +1,5 @@
 package:
-  name: torch-points-kernels-test2
+  name: torch-points-kernels
   version: 0.7.1
 
 source:
