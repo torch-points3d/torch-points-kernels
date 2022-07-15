@@ -10,21 +10,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-16.04, macos-10.15, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        torch-version: [1.8.0, 1.9.0]
-        cuda-version: ['cpu', 'cu101', 'cu102', 'cu111']
+        os: [ubuntu-18.04, macos-10.15] #, windows-2019]
+        python-version: ['3.7', '3.8', '3.9'] #, '3.10']
+        torch-version: [1.10.0, 1.11.0, 1.12.0]
+        cuda-version: ['cpu', 'cu102', 'cu113', 'cu115', 'cu116']
         exclude:
-          - torch-version: 1.9.0
-            cuda-version: 'cu101'
-          - os: macos-10.15
-            cuda-version: 'cu101'
+          - torch-version: 1.10.0
+            cuda-version: 'cu116'
+          - torch-version: 1.11.0
+            cuda-version: 'cu116'
+          - torch-version: 1.12.0
+            cuda-version: 'cu115'
+          - torch-version: 1.10.0
+            cuda-version: 'cu115'
+          - torch-version: 1.10.0
+            python-version: '3.10'
+          - os: windows-2019
+            torch-version: 1.11.0
+            cuda-version: 'cu102'
           - os: macos-10.15
             cuda-version: 'cu102'
           - os: macos-10.15
-            cuda-version: 'cu111'
-          - os: windows-latest
-            cuda-version: 'cu101'
+            cuda-version: 'cu113'
+          - os: macos-10.15
+            cuda-version: 'cu115'
+          - os: macos-10.15
+            cuda-version: 'cu116'
+          - os: macos-10.15
+            python-version: '3.10' # this is unhappy
+          - os: ubuntu-18.04
+            cuda-version: 'cu115'
+          - os: windows-2019
+            cuda-version: 'cu102'
+          - os: windows-2019  # Complains about CUDA mismatch.
+            python-version: '3.7'
 
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +51,16 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
+          
+      - name: Free up disk space
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo rm -rf /usr/share/dotnet
+
+      - name: Free up disk space
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo rm -rf /usr/share/dotnet
 
       - name: Install Conda packages
         run: |
@@ -39,8 +68,24 @@ jobs:
         shell:
           bash -l {0}
 
-      - name: Build Conda package
+      - name: Install CUDA ${{ matrix.cuda-version }}
+        if: ${{ matrix.cuda-version != 'cpu' }}
         run: |
+          bash .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}.sh
+        shell:
+          bash
+
+      - name: Build Conda package for CPU
+        if: ${{ matrix.cuda-version == 'cpu' }}
+        run: |
+          FORCE_CUDA=0 TORCH_CUDA_ARCH_LIST=0 ./conda/torch-points-kernels/build_conda.sh ${{ matrix.python-version }} ${{ matrix.torch-version }} ${{ matrix.cuda-version }}
+        shell:
+          bash -l {0}
+
+      - name: Build Conda package for GPU
+        if: ${{ matrix.cuda-version != 'cpu' }}
+        run: |
+          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
           ./conda/torch-points-kernels/build_conda.sh ${{ matrix.python-version }} ${{ matrix.torch-version }} ${{ matrix.cuda-version }}
         shell:
           bash -l {0}
@@ -48,7 +93,7 @@ jobs:
       - name: Publish Conda package
         run: |
           conda install anaconda-client --yes
-          anaconda upload --force --user torch-points3d --label main $HOME/conda-bld/*/*.tar.bz2
+          anaconda upload --force --label main $HOME/conda-bld/*/*.tar.bz2
         env:
           ANACONDA_API_TOKEN: ${{ secrets.CONDA_TOKEN }}
         shell:

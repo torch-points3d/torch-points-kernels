@@ -1,19 +1,20 @@
 # 3D Point Cloud Kernels
 Pytorch CPU and CUDA kernels for spatial search and interpolation for 3D point clouds.
 
-[![PyPI version](https://badge.fury.io/py/torch-points-kernels.svg)](https://badge.fury.io/py/torch-points-kernels) ![Deploy](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Deploy/badge.svg) ![Unittests](https://github.com/nicolas-chaulet/torch-points-kernels/workflows/Unittests/badge.svg)
+[![PyPI version](https://badge.fury.io/py/torch-points-kernels.svg)](https://badge.fury.io/py/torch-points-kernels) [![Deploy](https://github.com/torch-points3d/torch-points-kernels/actions/workflows/deploy.yaml/badge.svg)](https://github.com/torch-points3d/torch-points-kernels/actions/workflows/deploy.yaml) [![Unittests](https://github.com/torch-points3d/torch-points-kernels/actions/workflows/tests.yaml/badge.svg)](https://github.com/torch-points3d/torch-points-kernels/actions/workflows/tests.yaml)
 
 ## Installation
-**Requires torch** version 1.0 or higher to be installed before proceeding. Once this is done, simply run
+**Update:** we now provide precompiled Conda packages for the latest PyTorch/CUDA combinations (PyTorch >= 1.10.0). To install with conda:
+```
+conda install -c torch-points3d torch-points-kernels
+```
+
+Or, you can compile the wheel yourself for any PyTorch/CUDA combination (must have a matching installation of CUDA toolkit):
 ```
 pip install torch-points-kernels
 ```
-or with poetry:
-```
-poetry add torch-points-kernels
-```
 
-To force CUDA installation (for example on Docker builds) please use the flag `FORCE_CUDA` like
+To force CUDA installation (for example on Docker builds) please use the flag `FORCE_CUDA`:
 ```
 FORCE_CUDA=1 pip install torch-points-kernels
 ```

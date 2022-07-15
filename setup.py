@@ -28,24 +28,28 @@ if os.getenv("FORCE_ONLY_CPU", "0") == "1":
 def get_ext_modules():
     TORCH_MAJOR = int(torch.__version__.split(".")[0])
     TORCH_MINOR = int(torch.__version__.split(".")[1])
-    extra_compile_args = ["-O3"]
+    extra_compile_args = {"cxx": ["-O3"]}
     if (TORCH_MAJOR > 1) or (TORCH_MAJOR == 1 and TORCH_MINOR > 2):
-        extra_compile_args += ["-DVERSION_GE_1_3"]
+        extra_compile_args["cxx"] += ["-DVERSION_GE_1_3"]
 
     ext_src_root = "cuda"
-    ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob("{}/src/*.cu".format(ext_src_root))
+    ext_sources = glob.glob("{}/src/*.cpp".format(ext_src_root)) + glob.glob(
+        "{}/src/*.cu".format(ext_src_root)
+    )
 
     ext_modules = []
     if WITH_CUDA:
+        nvcc_flags = os.getenv("NVCC_FLAGS", "")
+        nvcc_flags = [] if nvcc_flags == "" else nvcc_flags.split(" ")
+        nvcc_flags += ["-arch=sm_35", "--expt-relaxed-constexpr", "-O2"]
+        extra_compile_args["nvcc"] = nvcc_flags
+
         ext_modules.append(
             CUDAExtension(
                 name="torch_points_kernels.points_cuda",
                 sources=ext_sources,
                 include_dirs=["{}/include".format(ext_src_root)],
-                extra_compile_args={
-                    "cxx": extra_compile_args,
-                    "nvcc": extra_compile_args,
-                },
+                extra_compile_args=extra_compile_args,
             )
         )
 
@@ -58,9 +62,7 @@ def get_ext_modules():
                 name="torch_points_kernels.points_cpu",
                 sources=cpu_ext_sources,
                 include_dirs=["{}/include".format(cpu_ext_src_root)],
-                extra_compile_args={
-                    "cxx": extra_compile_args,
-                },
+                extra_compile_args=extra_compile_args,
             )
         )
     return ext_modules
