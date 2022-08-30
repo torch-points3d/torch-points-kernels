@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <torch/extension.h>
-
+#include <THC/THCAtomics.cuh>
 #include "cuda_utils.h"
 #include <vector>
 
@@ -159,12 +159,12 @@ std::vector<torch::Tensor> chamfer_dist_kernel_wrapper(torch::Tensor xyz1, torch
     const int batch_size = xyz1.size(0);
     const int n = xyz1.size(1); // num_points point cloud A
     const int m = xyz2.size(1); // num_points point cloud B
-    torch::Tensor dist1 = torch::zeros({batch_size, n}, torch::CUDA(xyz1.scalar_type()));
-    torch::Tensor dist2 = torch::zeros({batch_size, m}, torch::CUDA(xyz1.scalar_type()));
-    torch::Tensor idx1 = torch::zeros({batch_size, n}, torch::CUDA(torch::kInt));
-    torch::Tensor idx2 = torch::zeros({batch_size, m}, torch::CUDA(torch::kInt));
+    auto dist1 = torch::zeros({batch_size, n}, torch::CUDA(xyz1.scalar_type()));
+    auto dist2 = torch::zeros({batch_size, m}, torch::CUDA(xyz1.scalar_type()));
+    auto idx1 = torch::zeros({batch_size, n}, torch::CUDA(torch::kInt));
+    auto idx2 = torch::zeros({batch_size, m}, torch::CUDA(torch::kInt));
 
-    AT_DISPATCH_FLOATING_TYPES(
+    AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         xyz1.scalar_type(), "chamfer_dist_cuda", ([&] {
             chamfer_dist_kernel<scalar_t><<<dim3(32, 16, 1), 512>>>(
                 batch_size, n, xyz1.data_ptr<scalar_t>(), m, xyz2.data_ptr<scalar_t>(),
@@ -202,12 +202,12 @@ __global__ void chamfer_dist_grad_kernel(int b, int n, const scalar_t* __restric
             scalar_t y2 = xyz2[(i * m + j2) * 3 + 1];
             scalar_t z2 = xyz2[(i * m + j2) * 3 + 2];
             scalar_t g = grad_dist1[i * n + j] * 2;
-            atomicAdd(&(grad_xyz1[(i * n + j) * 3 + 0]), g * (x1 - x2));
-            atomicAdd(&(grad_xyz1[(i * n + j) * 3 + 1]), g * (y1 - y2));
-            atomicAdd(&(grad_xyz1[(i * n + j) * 3 + 2]), g * (z1 - z2));
-            atomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 0]), -(g * (x1 - x2)));
-            atomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 1]), -(g * (y1 - y2)));
-            atomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 2]), -(g * (z1 - z2)));
+            gpuAtomicAdd(&(grad_xyz1[(i * n + j) * 3 + 0]), g * (x1 - x2));
+            gpuAtomicAdd(&(grad_xyz1[(i * n + j) * 3 + 1]), g * (y1 - y2));
+            gpuAtomicAdd(&(grad_xyz1[(i * n + j) * 3 + 2]), g * (z1 - z2));
+            gpuAtomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 0]), -(g * (x1 - x2)));
+            gpuAtomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 1]), -(g * (y1 - y2)));
+            gpuAtomicAdd(&(grad_xyz2[(i * m + j2) * 3 + 2]), -(g * (z1 - z2)));
         }
     }
 }
@@ -220,10 +220,10 @@ std::vector<torch::Tensor> chamfer_dist_grad_kernel_wrapper(torch::Tensor xyz1, 
     const int batch_size = xyz1.size(0);
     const int n = xyz1.size(1); // num_points point cloud A
     const int m = xyz2.size(1); // num_points point cloud B
-    torch::Tensor grad_xyz1 = torch::zeros_like(xyz1);
-    torch::Tensor grad_xyz2 = torch::zeros_like(xyz2);
+    auto grad_xyz1 = torch::zeros_like(xyz1);
+    auto grad_xyz2 = torch::zeros_like(xyz2);
 
-    AT_DISPATCH_FLOATING_TYPES(
+    AT_DISPATCH_FLOATING_TYPES_AND_HALF(
         xyz1.scalar_type(), "chamfer_dist_grad_cuda", ([&] {
             chamfer_dist_grad_kernel<scalar_t><<<dim3(1, 16, 1), 256>>>(
                 batch_size, n, xyz1.data_ptr<scalar_t>(), m, xyz2.data_ptr<scalar_t>(),

@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Function
 import torch.nn as nn
+from torch.cuda.amp import custom_bwd,custom_fwd
 import sys
 from typing import Optional, Any, Tuple
 
@@ -66,19 +67,20 @@ def three_nn(unknown, known):
 
 class ThreeInterpolate(Function):
     @staticmethod
+    @custom_fwd(cast_inputs=torch.half)
     def forward(ctx, features, idx, weight):
         # type(Any, torch.Tensor, torch.Tensor, torch.Tensor) -> Torch.Tensor
         B, c, m = features.size()
         n = idx.size(1)
 
         ctx.three_interpolate_for_backward = (idx, weight, m)
-
         if features.is_cuda:
             return tpcuda.three_interpolate(features, idx, weight)
         else:
             return tpcpu.knn_interpolate(features, idx, weight)
 
     @staticmethod
+    @custom_bwd
     def backward(ctx, grad_out):
         # type: (Any, torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         r"""

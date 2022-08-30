@@ -2,9 +2,11 @@ import unittest
 import torch
 from torch.autograd import gradcheck
 from torch_points_kernels import three_interpolate, three_nn
-
-from . import run_if_cuda
-
+import sys 
+import os
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+sys.path.insert(0, ROOT)
+from test import run_if_cuda
 
 class TestInterpolate(unittest.TestCase):
     @run_if_cuda

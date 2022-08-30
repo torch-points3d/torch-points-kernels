@@ -6,14 +6,14 @@ import unittest
 
 from torch.autograd import gradcheck
 
-from . import run_if_cuda
+
 
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
 from torch_points_kernels.chamfer_dist import ChamferFunction, chamfer_dist
-
+from test import run_if_cuda
 
 class TestChamferDistance(unittest.TestCase):
     @run_if_cuda
