@@ -28,6 +28,9 @@ build:
   script: pip install .
   script_env:
     - FORCE_CUDA
+    - CUDA_HOME={{ environ.get('CUDA_HOME') }}
+    - CC={{ environ.get('CC') }}
+    - CXX={{ environ.get('CXX') }}
 
 test:
   imports:
