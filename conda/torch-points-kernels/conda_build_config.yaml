@@ -1,2 +1,3 @@
 channel_sources:
   - pytorch,conda-forge,defaults
+numpy: '1.21.5'
