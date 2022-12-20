@@ -3,6 +3,7 @@
 
 #include "neighbors.h"
 #include <chrono>
+#include <memory>
 #include <random>
 
 template <typename scalar_t>
