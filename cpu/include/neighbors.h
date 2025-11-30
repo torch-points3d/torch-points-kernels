@@ -5,19 +5,18 @@
 #include <cstdint>
 #include <set>
 
-using namespace std;
 
 template <typename scalar_t>
-int nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                        vector<int64_t>& neighbors_indices, vector<float>& dists, float radius,
+int nanoflann_neighbors(std::vector<scalar_t>& queries, std::vector<scalar_t>& supports,
+                        std::vector<int64_t>& neighbors_indices, std::vector<float>& dists, float radius,
                         int max_num, int mode, bool sorted);
 
 template <typename scalar_t>
-int batch_nanoflann_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                              vector<int64_t>& q_batches, vector<int64_t>& s_batches,
-                              vector<int64_t>& neighbors_indices, vector<float>& dists,
+int batch_nanoflann_neighbors(std::vector<scalar_t>& queries, std::vector<scalar_t>& supports,
+                              std::vector<int64_t>& q_batches, std::vector<int64_t>& s_batches,
+                              std::vector<int64_t>& neighbors_indices, std::vector<float>& dists,
                               float radius, int max_num, int mode, bool sorted);
 
 template <typename scalar_t>
-void nanoflann_knn_neighbors(vector<scalar_t>& queries, vector<scalar_t>& supports,
-                             vector<int64_t>& neighbors_indices, vector<float>& dists, int k);
+void nanoflann_knn_neighbors(std::vector<scalar_t>& queries, std::vector<scalar_t>& supports,
+                             std::vector<int64_t>& neighbors_indices, std::vector<float>& dists, int k);

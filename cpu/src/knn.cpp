@@ -45,8 +45,8 @@ std::pair<at::Tensor, at::Tensor> dense_knn(at::Tensor support, at::Tensor query
     CHECK_CPU(support);
 
     int b = query.size(0);
-    vector<at::Tensor> batch_idx;
-    vector<at::Tensor> batch_dist;
+    std::vector<at::Tensor> batch_idx;
+    std::vector<at::Tensor> batch_dist;
     for (int i = 0; i < b; i++)
     {
         auto out_pair = _single_batch_knn(support[i], query[i], k);
